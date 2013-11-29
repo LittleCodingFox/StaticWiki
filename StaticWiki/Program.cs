@@ -68,7 +68,7 @@ namespace StaticWiki
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to read theme file \"" + ThemeFile + "\"");
+                Console.WriteLine("Failed to read theme file \"" + ThemeFile + "\": " + e.Message);
 
                 return;
             }
@@ -121,7 +121,7 @@ namespace StaticWiki
 
                     if (Index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + Processor.Transform(BaseName.Replace("_", " ")).Replace("<p>", "").Replace("</p>", "") + FinalText.Substring(Index + "{TITLE}".Length);
+                        FinalText = FinalText.Substring(0, Index) + Processor.Transform(BasePageTitle + ": " + BaseName.Replace("_", " ")).Replace("<p>", "").Replace("</p>", "") + FinalText.Substring(Index + "{TITLE}".Length);
                     };
 
                     Index = FinalText.IndexOf("{CONTENT}");
