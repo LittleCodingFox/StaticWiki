@@ -1,0 +1,4 @@
+C:\Projects\StaticWiki\MarkdownSharp\bin\Debug\MarkdownSharp.dll
+C:\Projects\StaticWiki\MarkdownSharp\bin\Debug\MarkdownSharp.pdb
+C:\Projects\StaticWiki\MarkdownSharp\obj\Debug\MarkdownSharp.dll
+C:\Projects\StaticWiki\MarkdownSharp\obj\Debug\MarkdownSharp.pdb
