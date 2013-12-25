@@ -33,7 +33,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MarkdownSharp">
-      <HintPath>..\MarkdownSharp\bin\Release\MarkdownSharp.dll</HintPath>
+      <HintPath>.\MarkdownSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
