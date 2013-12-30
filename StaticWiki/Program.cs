@@ -140,35 +140,15 @@ namespace StaticWiki
                 {
                     StreamWriter Out = new StreamWriter(OutName);
 
-                    for (; ; )
-                    {
-                        Index = OutText.IndexOf("/Content/");
-
-                        if (Index == -1)
-                            break;
-
-                        String Link = OutText.Substring(Index + "/Content/".Length);
-                        int LinkLength = OutText.IndexOf("\"", Index) - Index;
-
-                        if (Link.IndexOf(".") != -1)
-                        {
-                            Link = Link.Substring(0, Link.IndexOf(".")) + ".html";
-                        }
-                        else
-                        {
-                            Link = Link.Substring(0, Link.IndexOf("\""));
-                        }
-
-                        OutText = OutText.Substring(0, Index) + Link + OutText.Substring(Index + LinkLength);
-                    }
-
                     String FinalText = (String)ThemeText.Clone();
 
                     Index = FinalText.IndexOf("{TITLE}");
 
-                    if (Index != -1)
+                    while (Index != -1)
                     {
                         FinalText = FinalText.Substring(0, Index) + Processor.Transform(BasePageTitle + ": " + BaseName.Replace("_", " ")).Replace("<p>", "").Replace("</p>", "") + FinalText.Substring(Index + "{TITLE}".Length);
+
+                        Index = FinalText.IndexOf("{TITLE}");
                     };
 
                     Index = FinalText.IndexOf("{CONTENT}");
