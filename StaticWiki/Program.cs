@@ -28,6 +28,8 @@ namespace StaticWiki
                 Console.WriteLine("\t\t{TITLE} - should be placed on the <title> tag");
                 Console.WriteLine("\t\t{CONTENT} - should be placed where you want the page content to show");
                 Console.WriteLine("\t\t{CATEGORIES} - should be placed where you want the category listings to show");
+                Console.WriteLine("\t\t{SEARCHNAMES} - A list of javascript strings containing the page names");
+                Console.WriteLine("\t\t{SEARCHADDRESSES} - A list of javascript strings containing the page addresses");
                 Console.WriteLine("Page Title is actually base page title - Page title will actually be \"PageTitle - CurrentPageTitle\"");
                 Console.WriteLine("Current Page Title will have \"_\"'s removed");
             }
@@ -121,6 +123,14 @@ namespace StaticWiki
                 }
             }
 
+            StringBuilder SearchNames = new StringBuilder(), SearchURLs = new StringBuilder();
+
+            foreach (KeyValuePair<String, FileInfo> pair in FileCache)
+            {
+                SearchNames.Append((SearchNames.Length > 0 ? ", " : "") + "\"" + pair.Key + "\"\n");
+                SearchURLs.Append((SearchURLs.Length > 0 ? ", " : "") + "\"" + pair.Value.BaseName + ".html\"\n");
+            }
+
             for (int i = 0; i < files.Length; i++)
             {
                 String BaseName = files[i].Substring(FromDirectory.Length + 1);
@@ -149,6 +159,24 @@ namespace StaticWiki
                         FinalText = FinalText.Substring(0, Index) + Processor.Transform(BasePageTitle + ": " + BaseName.Replace("_", " ")).Replace("<p>", "").Replace("</p>", "") + FinalText.Substring(Index + "{TITLE}".Length);
 
                         Index = FinalText.IndexOf("{TITLE}");
+                    };
+
+                    Index = FinalText.IndexOf("{SEARCHNAMES}");
+
+                    while (Index != -1)
+                    {
+                        FinalText = FinalText.Substring(0, Index) + SearchNames + FinalText.Substring(Index + "{SEARCHNAMES}".Length);
+
+                        Index = FinalText.IndexOf("{SEARCHNAMES}");
+                    };
+
+                    Index = FinalText.IndexOf("{SEARCHURLS}");
+
+                    while (Index != -1)
+                    {
+                        FinalText = FinalText.Substring(0, Index) + SearchURLs + FinalText.Substring(Index + "{SEARCHURLS}".Length);
+
+                        Index = FinalText.IndexOf("{SEARCHURLS}");
                     };
 
                     Index = FinalText.IndexOf("{CONTENT}");
