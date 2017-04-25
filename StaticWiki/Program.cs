@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using MarkdownSharp;
+using Markdig;
 
 namespace StaticWiki
 {
     class FileInfo
     {
-        public String BaseName, Text;
+        public string baseName, text;
     };
 
     class Program
@@ -20,186 +20,215 @@ namespace StaticWiki
             if (args.Length == 0)
             {
                 Console.WriteLine("StaticWiki started with no options. The options available are:");
-                Console.WriteLine("StaticWiki -from FromDirectory -to ToDirectory -theme themefolder -title pagetitle");
+                Console.WriteLine("StaticWiki -from FromDirectory -to ToDirectory -theme themefile -title title");
                 Console.WriteLine();
                 Console.WriteLine("From Directory should contain multiple .txt files that contain Markdown code");
-                Console.WriteLine("Theme folder should contain a theme.html file with special section keywords to replace with page contents");
+                Console.WriteLine("Theme file should specify a text file file with special section keywords to replace with page contents.");
+                Console.WriteLine("Processed pages will have the same extension as the theme file.");
+                Console.WriteLine("Title is the base page title - It will become be \"Title - Current Page Title\"");
+                Console.WriteLine("Current Page Title will have \"_\"'s removed");
                 Console.WriteLine("Special sections are:");
                 Console.WriteLine("\t\t{TITLE} - should be placed on the <title> tag");
                 Console.WriteLine("\t\t{CONTENT} - should be placed where you want the page content to show");
                 Console.WriteLine("\t\t{CATEGORIES} - should be placed where you want the category listings to show");
                 Console.WriteLine("\t\t{SEARCHNAMES} - A list of javascript strings containing the page names");
                 Console.WriteLine("\t\t{SEARCHADDRESSES} - A list of javascript strings containing the page addresses");
-                Console.WriteLine("Page Title is actually base page title - Page title will actually be \"PageTitle - CurrentPageTitle\"");
-                Console.WriteLine("Current Page Title will have \"_\"'s removed");
             }
 
-            String FromDirectory = ".", ToDirectory = "./Out/", ThemeFolder = "", BasePageTitle = "TEMPLATE";
+            var fromDirectory = ".";
+            var toDirectory = "./Out/";
+            var themeFileName = "";
+            var basePageTitle = "TEMPLATE";
 
-            Dictionary<String, FileInfo> FileCache = new Dictionary<String, FileInfo>();
+            var fileCache = new Dictionary<string, FileInfo>();
 
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-from" && i + 1 < args.Length)
                 {
-                    FromDirectory = args[i + 1];
+                    fromDirectory = args[i + 1];
                 }
                 else if (args[i] == "-to" && i + 1 < args.Length)
                 {
-                    ToDirectory = args[i + 1];
+                    toDirectory = args[i + 1];
                 }
                 else if (args[i] == "-theme" && i + 1 < args.Length)
                 {
-                    ThemeFolder = args[i + 1];
+                    themeFileName = args[i + 1];
                 }
                 else if (args[i] == "-title" && i + 1 < args.Length)
                 {
-                    BasePageTitle = args[i + 1];
+                    basePageTitle = args[i + 1];
                 }
             }
 
-            string[] files = Directory.GetFiles(FromDirectory, "*.txt");
-
-            Markdown Processor = new Markdown();
+            var pipeline = new MarkdownPipelineBuilder().Build();
 
             Console.WriteLine("StaticWiki starting up with values:");
-            Console.WriteLine("From Directory: \"" + FromDirectory + "\"");
-            Console.WriteLine("To Directory: \"" + ToDirectory + "\"");
-            Console.WriteLine("Theme Folder: \"" + ThemeFolder + "\\theme.html\"");
-            Console.WriteLine("Base Page Title: \"" + BasePageTitle + "\"");
+            Console.WriteLine(string.Format("From Directory: \"{0}\"", fromDirectory));
+            Console.WriteLine(string.Format("To Directory: \"{0}\"", toDirectory));
+            Console.WriteLine(string.Format("Theme File: \"{0}\"", themeFileName));
+            Console.WriteLine(string.Format("Base Page Title: \"{0}\"", basePageTitle));
 
-            String ThemeText = "";
+            string[] files = new string[0];
 
             try
             {
-                StreamReader In = new StreamReader(ThemeFolder + "\\theme.html");
+                files = Directory.GetFiles(fromDirectory, "*.txt");
+            }
+            catch(Exception)
+            {
+                Console.WriteLine(string.Format("StaticWiki failed to find files at the directory '{0}'", fromDirectory));
+            }
 
-                ThemeText = In.ReadToEnd();
+            var themeText = "";
+
+            try
+            {
+                StreamReader In = new StreamReader(themeFileName);
+
+                themeText = In.ReadToEnd();
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to read theme file \"" + ThemeFolder + "\\theme.html\": " + e.Message);
+                Console.WriteLine(string.Format("Failed to read theme file \"{0}\": {1}", themeFileName, e.Message));
 
                 return;
             }
 
-            Console.WriteLine("Processing " + files.Length + " files");
+            var pageExtension = Path.GetExtension(themeFileName);
 
-            String CategoriesText = "";
+            try
+            {
+                if(!Directory.Exists(toDirectory))
+                {
+                    Directory.CreateDirectory(toDirectory);
+                }
+            }
+            catch(Exception)
+            {
+            }
+
+            Console.WriteLine(string.Format("Processing {0} files", files.Length));
+
+            var categoriesText = "";
 
             for (int i = 0; i < files.Length; i++)
             {
-                String BaseName = files[i].Substring(FromDirectory.Length + 1);
-                BaseName = BaseName.Substring(0, BaseName.LastIndexOf("."));
+                var baseName = files[i].Substring(fromDirectory.Length + 1);
+                baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
-                String OutName = ToDirectory + "/" + BaseName + ".html";
+                var outName = toDirectory + "/" + baseName + ".html";
 
-                Console.WriteLine("... " + files[i] + "(as " + OutName + ")");
+                Console.WriteLine("... " + files[i] + "(as " + outName + ")");
 
                 try
                 {
-                    StreamReader In = new StreamReader(files[i]);
+                    var inReader = new StreamReader(files[i]);
 
-                    String Content = In.ReadToEnd();
+                    var content = inReader.ReadToEnd();
 
-                    if (BaseName.ToUpper() == "CATEGORIES")
+                    if (baseName.Equals("CATEGORIES", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        CategoriesText = Processor.Transform(Content);
+                        categoriesText = Markdown.ToHtml(content, pipeline);
                     }
                     else
                     {
-                        FileInfo finfo = new FileInfo();
-                        finfo.BaseName = BaseName;
-                        finfo.Text = Content;
+                        var fileInfo = new FileInfo();
+                        fileInfo.baseName = baseName;
+                        fileInfo.text = content;
 
-                        FileCache.Add(BaseName, finfo);
+                        fileCache.Add(baseName, fileInfo);
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed to process file '" + files[i] + "': " + e.Message);
+                    Console.WriteLine(string.Format("Failed to process file '{0}': {1}", files[i], e.Message));
 
                     continue;
                 }
             }
 
-            StringBuilder SearchNames = new StringBuilder(), SearchURLs = new StringBuilder();
+            var searchNames = new StringBuilder();
+            var searchURLs = new StringBuilder();
 
-            foreach (KeyValuePair<String, FileInfo> pair in FileCache)
+            foreach (var pair in fileCache)
             {
-                SearchNames.Append((SearchNames.Length > 0 ? ", " : "") + "\"" + pair.Key + "\"\n");
-                SearchURLs.Append((SearchURLs.Length > 0 ? ", " : "") + "\"" + pair.Value.BaseName + ".html\"\n");
+                searchNames.Append((searchNames.Length > 0 ? ", " : "") + "\"" + pair.Key + "\"\n");
+                searchURLs.Append((searchURLs.Length > 0 ? ", " : "") + "\"" + pair.Value.baseName + ".html\"\n");
             }
 
             for (int i = 0; i < files.Length; i++)
             {
-                String BaseName = files[i].Substring(FromDirectory.Length + 1);
-                BaseName = BaseName.Substring(0, BaseName.LastIndexOf("."));
+                var baseName = files[i].Substring(fromDirectory.Length + 1);
+                baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
-                String OutName = ToDirectory + "/" + BaseName + ".html";
+                var outName = Path.GetFullPath(toDirectory + "/" + baseName + pageExtension);
 
-                if (BaseName.ToUpper() == "CATEGORIES")
+                if (baseName.Equals("CATEGORIES", StringComparison.InvariantCultureIgnoreCase) || !fileCache.ContainsKey(baseName))
                     continue;
 
-                FileInfo finfo = FileCache[BaseName];
-                String OutText = Processor.Transform(finfo.Text);
+                var fileInfo = fileCache[baseName];
+                var outText = Markdown.ToHtml(fileInfo.text, pipeline);
 
-                int Index = 0;
+                int index = 0;
+
+                var processedTitle = Markdown.ToHtml(basePageTitle + ": " + baseName.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
 
                 try
                 {
-                    StreamWriter Out = new StreamWriter(OutName);
+                    var outWriter = new StreamWriter(outName);
 
-                    String FinalText = (String)ThemeText.Clone();
+                    var finalText = (string)themeText.Clone();
 
-                    Index = FinalText.IndexOf("{TITLE}");
+                    index = finalText.IndexOf("{TITLE}");
 
-                    while (Index != -1)
+                    while (index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + Processor.Transform(BasePageTitle + ": " + BaseName.Replace("_", " ")).Replace("<p>", "").Replace("</p>", "") + FinalText.Substring(Index + "{TITLE}".Length);
+                        finalText = finalText.Substring(0, index) +  processedTitle + finalText.Substring(index + "{TITLE}".Length);
 
-                        Index = FinalText.IndexOf("{TITLE}");
+                        index = finalText.IndexOf("{TITLE}");
                     };
 
-                    Index = FinalText.IndexOf("{SEARCHNAMES}");
+                    index = finalText.IndexOf("{SEARCHNAMES}");
 
-                    while (Index != -1)
+                    while (index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + SearchNames + FinalText.Substring(Index + "{SEARCHNAMES}".Length);
+                        finalText = finalText.Substring(0, index) + searchNames + finalText.Substring(index + "{SEARCHNAMES}".Length);
 
-                        Index = FinalText.IndexOf("{SEARCHNAMES}");
+                        index = finalText.IndexOf("{SEARCHNAMES}");
                     };
 
-                    Index = FinalText.IndexOf("{SEARCHURLS}");
+                    index = finalText.IndexOf("{SEARCHURLS}");
 
-                    while (Index != -1)
+                    while (index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + SearchURLs + FinalText.Substring(Index + "{SEARCHURLS}".Length);
+                        finalText = finalText.Substring(0, index) + searchURLs + finalText.Substring(index + "{SEARCHURLS}".Length);
 
-                        Index = FinalText.IndexOf("{SEARCHURLS}");
+                        index = finalText.IndexOf("{SEARCHURLS}");
                     };
 
-                    Index = FinalText.IndexOf("{CONTENT}");
+                    index = finalText.IndexOf("{CATEGORIES}");
 
-                    if (Index != -1)
+                    if (index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + OutText + FinalText.Substring(Index + "{CONTENT}".Length);
+                        finalText = finalText.Substring(0, index) + categoriesText + finalText.Substring(index + "{CATEGORIES}".Length);
                     };
 
-                    Index = FinalText.IndexOf("{CATEGORIES}");
+                    index = finalText.IndexOf("{CONTENT}");
 
-                    if (Index != -1)
+                    if (index != -1)
                     {
-                        FinalText = FinalText.Substring(0, Index) + CategoriesText + FinalText.Substring(Index + "{CATEGORIES}".Length);
+                        finalText = finalText.Substring(0, index) + outText + finalText.Substring(index + "{CONTENT}".Length);
                     };
 
-                    Out.Write(FinalText);
-                    Out.Flush();
-                    Out.Close();
+                    outWriter.Write(finalText);
+                    outWriter.Flush();
+                    outWriter.Close();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Failed to process file '" + files[i] + "': " + e.Message);
+                    Console.WriteLine(string.Format("Failed to process file '{0}': {1}", files[i], e.Message));
 
                     continue;
                 }

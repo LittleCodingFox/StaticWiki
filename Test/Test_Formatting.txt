@@ -1,0 +1,31 @@
+*Italic*
+
+**Bold**
+
+***Italic and Bold***
+
+* A
+* B
+* C
+
+- A
+- B
+- C
+
+1. A
+2. B
+3. C
+
+> A
+> B
+>> C
+
+`A`
+
+`B`
+
+`C`
+
+```csharp
+var i = 0;
+```
