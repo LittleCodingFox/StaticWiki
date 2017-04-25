@@ -15,6 +15,11 @@ namespace StaticWiki
 
     class Program
     {
+        private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
+        {
+            return Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
+        }
+
         static void Main(string[] args)
         {
             if (args.Length == 0)
@@ -118,7 +123,7 @@ namespace StaticWiki
                 var baseName = files[i].Substring(fromDirectory.Length + 1);
                 baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
-                var outName = toDirectory + "/" + baseName + ".html";
+                var outName = toDirectory + "/" + baseName + pageExtension;
 
                 Console.WriteLine("... " + files[i] + "(as " + outName + ")");
 
@@ -154,8 +159,8 @@ namespace StaticWiki
 
             foreach (var pair in fileCache)
             {
-                searchNames.Append((searchNames.Length > 0 ? ", " : "") + "\"" + pair.Key + "\"\n");
-                searchURLs.Append((searchURLs.Length > 0 ? ", " : "") + "\"" + pair.Value.baseName + ".html\"\n");
+                searchNames.Append((searchNames.Length > 0 ? ", " : "") + "\"" + MarkdownStrippedString(pair.Key, pipeline).Replace("\n", "") + "\"");
+                searchURLs.Append((searchURLs.Length > 0 ? ", " : "") + "\"" + pair.Value.baseName + "\"");
             }
 
             for (int i = 0; i < files.Length; i++)

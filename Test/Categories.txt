@@ -1,3 +1,2 @@
-[Test Headers](Test_Headers.html)
-
-[Test Formatting](Test_Formatting.html)
+<li><a href="index.html">Introduction</a></li>
+<li><a href="Page_Sample.html">Page Sample</a></li>

@@ -1,3 +1,3 @@
 @echo off
-call StaticWiki.exe -from Test -to TestOut -theme Themes/Simple/theme.html
+call StaticWiki.exe -from Test -to TestOut -theme Themes/Pretty/theme.html
 pause
