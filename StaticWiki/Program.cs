@@ -15,6 +15,8 @@ namespace StaticWiki
 
     class Program
     {
+        private const string NavigationFileName = "Navigation";
+
         private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
         {
             return Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
@@ -35,9 +37,12 @@ namespace StaticWiki
                 Console.WriteLine("Special sections are:");
                 Console.WriteLine("\t\t{TITLE} - should be placed on the <title> tag");
                 Console.WriteLine("\t\t{CONTENT} - should be placed where you want the page content to show");
-                Console.WriteLine("\t\t{CATEGORIES} - should be placed where you want the category listings to show");
                 Console.WriteLine("\t\t{SEARCHNAMES} - A list of javascript strings containing the page names");
                 Console.WriteLine("\t\t{SEARCHADDRESSES} - A list of javascript strings containing the page addresses");
+                Console.WriteLine("\t\t{BEGINNAV} - Begins a code snippet for navigation");
+                Console.WriteLine("\t\t{ENDNAV} - Ends a code snippet for navigation");
+                Console.WriteLine("\t\t{NAVNAME} - The name of the navigation item");
+                Console.WriteLine("\t\t{NAVLINK} - The link of the navigation item");
             }
 
             var fromDirectory = ".";
@@ -116,7 +121,7 @@ namespace StaticWiki
 
             Console.WriteLine(string.Format("Processing {0} files", files.Length));
 
-            var categoriesText = "";
+            var navigationInfo = new List<KeyValuePair<string, string> >();
 
             for (int i = 0; i < files.Length; i++)
             {
@@ -130,12 +135,33 @@ namespace StaticWiki
                 try
                 {
                     var inReader = new StreamReader(files[i]);
-
                     var content = inReader.ReadToEnd();
 
-                    if (baseName.Equals("CATEGORIES", StringComparison.InvariantCultureIgnoreCase))
+                    inReader.Close();
+
+                    if (baseName.Equals(NavigationFileName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        categoriesText = Markdown.ToHtml(content, pipeline);
+                        var lines = content.Split("\n".ToCharArray());
+
+                        foreach(var line in lines)
+                        {
+                            if(line.Length == 0)
+                            {
+                                continue;
+                            }
+
+                            var pieces = line.Split("=".ToCharArray());
+
+                            if(pieces.Length != 2)
+                            {
+                                Console.WriteLine("[Navigation] Invalid line '{0}': Expecting format 'Name=Link'", line);
+
+                                continue;
+                            }
+
+                            navigationInfo.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(),
+                                pieces[1].Replace("\n", "").Replace("\r", "").Trim()));
+                        }
                     }
                     else
                     {
@@ -170,13 +196,15 @@ namespace StaticWiki
 
                 var outName = Path.GetFullPath(toDirectory + "/" + baseName + pageExtension);
 
-                if (baseName.Equals("CATEGORIES", StringComparison.InvariantCultureIgnoreCase) || !fileCache.ContainsKey(baseName))
+                if (baseName.Equals(NavigationFileName, StringComparison.InvariantCultureIgnoreCase) || !fileCache.ContainsKey(baseName))
                     continue;
 
                 var fileInfo = fileCache[baseName];
                 var outText = Markdown.ToHtml(fileInfo.text, pipeline);
 
-                int index = 0;
+                var index = 0;
+                var beginNavIndex = -1;
+                var endNavIndex = -1;
 
                 var processedTitle = Markdown.ToHtml(basePageTitle + ": " + baseName.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
 
@@ -213,12 +241,38 @@ namespace StaticWiki
                         index = finalText.IndexOf("{SEARCHURLS}");
                     };
 
-                    index = finalText.IndexOf("{CATEGORIES}");
+                    index = finalText.IndexOf("{BEGINNAV}");
 
                     if (index != -1)
                     {
-                        finalText = finalText.Substring(0, index) + categoriesText + finalText.Substring(index + "{CATEGORIES}".Length);
-                    };
+                        finalText = finalText.Substring(0, index) + finalText.Substring(index + "{BEGINNAV}".Length);
+                        beginNavIndex = index;
+                    }
+
+                    index = finalText.IndexOf("{ENDNAV}");
+
+                    if (index != -1)
+                    {
+                        finalText = finalText.Substring(0, index) + finalText.Substring(index + "{ENDNAV}".Length);
+                        endNavIndex = index;
+
+                        if(beginNavIndex != -1)
+                        {
+                            var clonedText = finalText.Substring(beginNavIndex, endNavIndex - beginNavIndex);
+                            var processedText = new StringBuilder(finalText.Substring(0, beginNavIndex));
+
+                            for (var j = 0; j < navigationInfo.Count; j++)
+                            {
+                                var navItemText = clonedText.Replace("{NAVNAME}", navigationInfo[j].Key).Replace("{NAVLINK}", navigationInfo[j].Value);
+
+                                processedText.Append(navItemText);
+                            }
+
+                            processedText.Append(finalText.Substring(endNavIndex));
+
+                            finalText = processedText.ToString();
+                        }
+                    }
 
                     index = finalText.IndexOf("{CONTENT}");
 

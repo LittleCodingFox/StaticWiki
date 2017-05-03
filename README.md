@@ -10,7 +10,7 @@ Place your .txt files in a directory, choose an output directory, and a theme fi
 
 Then, run the generator with your chosen options and it'll output several files on the out directory with everything merged.
 	
-You should have a Categories.txt file that will contain the category content for the theme's {CATEGORIES} section.
+You should have a Navigation.txt file that will contain the navigation content for the theme.
 That file will be mixed together with the other .txt files.
 
 # Options
@@ -31,6 +31,9 @@ Special sections are:
 
 - {TITLE} - should be placed on the &lt;title&gt; tag
 - {CONTENT} - should be placed where you want the page content to show
-- {CATEGORIES} - should be placed where you want the category listings to show
 - {SEARCHNAMES} - A list of javascript strings containing the page names
 - {SEARCHADDRESSES} - A list of javascript strings containing the page addresses
+- {BEGINNAV} - Begins a code snippet for navigation
+- {ENDNAV} - Ends a code snippet for navigation
+- {NAVNAME} - The name of the navigation item
+- {NAVLINK} - The link of the navigation item
