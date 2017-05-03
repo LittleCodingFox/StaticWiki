@@ -72,7 +72,7 @@ namespace StaticWiki
                 }
             }
 
-            var pipeline = new MarkdownPipelineBuilder().Build();
+            var pipeline = new MarkdownPipelineBuilder().UseGridTables().UseBootstrap().Build();
 
             Console.WriteLine("StaticWiki starting up with values:");
             Console.WriteLine(string.Format("From Directory: \"{0}\"", fromDirectory));
