@@ -10,13 +10,14 @@ namespace StaticWiki
 {
     public class StaticWikiCore
     {
+        private const string NavigationFileName = "Navigation";
+        private const string SourceFilesExtension = "md";
+
         private class FileInfo
         {
             public string baseName;
             public string text;
         }
-
-        private const string NavigationFileName = "Navigation";
 
         private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
         {
@@ -160,7 +161,7 @@ namespace StaticWiki
 
             try
             {
-                files = Directory.GetFiles(sourceDirectory, "*.txt");
+                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension));
             }
             catch (Exception)
             {
