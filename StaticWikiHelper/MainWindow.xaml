@@ -1,0 +1,34 @@
+﻿<Window x:Class="StaticWikiHelper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:StaticWikiHelper"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    
+    <StackPanel Margin="10">
+        <Label>Source Directory:</Label>
+        <WrapPanel>
+            <TextBox Name="SourceDirectoryText" Width="150" HorizontalAlignment="Left" />
+            <Button Click="BrowseSourceDirectory_Click">Browse</Button>
+        </WrapPanel>
+
+        <Label>Destination Directory:</Label>
+        <WrapPanel>
+            <TextBox Name="DestinationDirectoryText" Width="150" HorizontalAlignment="Left" />
+            <Button Click="BrowseDestinationDirectory_Click">Browse</Button>
+        </WrapPanel>
+
+        <Label>Theme File Name:</Label>
+        <WrapPanel>
+            <TextBox Name="ThemeFileNameText" Width="150" HorizontalAlignment="Left" />
+            <Button Click="BrowseThemeFile_Click">Browse</Button>
+        </WrapPanel>
+
+        <Label>Title:</Label>
+        <TextBox Name="TitleText" Width="150" HorizontalAlignment="Left" />
+
+        <Button Name="WatcherButton" Width="100" HorizontalAlignment="Left" Click="WatcherButton_Click">Start Watcher</Button>
+    </StackPanel>
+</Window>
