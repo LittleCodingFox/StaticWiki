@@ -14,7 +14,7 @@ Static Wiki's sources for creating the HTML pages are regular Markdown text file
 
 You can also make backups more easily. Want to use `.zip` files? [Git](http://www.github.com) repositories? Post directly to the web?
 
-The web files generated use a base theme that shouldn't require any web resources to display properly, so you can take your files with you and present them to friends or work on your things without requiring an internet connection.
+The web files generated use a base theme that shouldn't require any online resources to display properly, so you can take your files with you and present them to friends or work on your things without requiring an internet connection.
 
 Did I mention it'll look an awful lot better than just a plain text file?
 
