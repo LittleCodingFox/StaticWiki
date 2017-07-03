@@ -38,7 +38,7 @@ Processed pages will have the same file extension as the theme file.
 
 The `Title` option in `staticwiki.ini` is the base page title - The pages generated will have a title in the form of `Title - Current Page Title`.
 
-Current Page Title will have "_"'s removed.
+Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sample` will become `Page Sample`.
 
 Special sections in themes are:
 
