@@ -1,39 +1,36 @@
-# StaticWiki
+# Introduction
 
-Static is a pure HTML Markdown-based wiki.
-
-It runs as a C# console application processing several .txt files and merging them with a theme file
+Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wiki which can be read without additional software, and even while offline.
 
 # Instructions
 
-Place your .txt files in a directory, choose an output directory, and a theme file with special sections for page title and content. You can find an example in the Themes folder.
+Copy the `Content` folder from the latest release and edit the `staticwiki.ini` file to change your wiki file.
 
-Then, run the generator with your chosen options and it'll output several files on the out directory with everything merged.
-	
-You should have a Navigation.txt file that will contain the navigation content for the theme.
-That file will be mixed together with the other .txt files.
+Then, start the `StaticWikiHelper` app, and open the folder you created. You should open the folder that contains the `staticwiki.ini` file, not a sub-folder.
 
-# Options
+From then on, while `StaticWikiHelper` is open, it will constantly generate your HTML files in the output folder (`staticwiki` by default) by reading the `.md` files in your source folder (`pagesources` by default)
+based on the theme file (`staticwikitheme/theme.html` by default).
 
-StaticWiki -from FromDirectory -to ToDirectory -theme themefolder -title pagetitle
+Finally, the `Navigation.md` file can be used to customize the page navigation of your wiki. You can create links one line at a time in a form of `Name=URL` per line. An example would be something like `Google=http://www.google.com`.
 
-From Directory should contain multiple .txt files that contain Markdown code
+# Notes
 
-Theme file should specify a text file file with special section keywords to replace with page contents.
+Some Markdown extensions are enabled by default, such as [piped tables](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#tables). Right now there is no possibility to change which are enabled by default,
+but in a future release that will be doable.
 
-Processed pages will have the same extension as the theme file.
+Processed pages will have the same file extension as the theme file.
 
-Title is the base page title - It will become be "Title - Current Page Title"
+The `Title` option in `staticwiki.ini` is the base page title - The pages generated will have a title in the form of `Title - Current Page Title`.
 
-Current Page Title will have "_"'s removed
+Current Page Title will have "_"'s removed.
 
-Special sections are:
+Special sections in themes are:
 
-- {TITLE} - should be placed on the &lt;title&gt; tag
-- {CONTENT} - should be placed where you want the page content to show
-- {SEARCHNAMES} - A list of javascript strings containing the page names
-- {SEARCHADDRESSES} - A list of javascript strings containing the page addresses
-- {BEGINNAV} - Begins a code snippet for navigation
-- {ENDNAV} - Ends a code snippet for navigation
-- {NAVNAME} - The name of the navigation item
-- {NAVLINK} - The link of the navigation item
+- `{TITLE}` - should be placed on the &lt;title&gt; tag
+- `{CONTENT}` - should be placed where you want the page content to show
+- `{SEARCHNAMES}` - A list of javascript strings containing the page names
+- `{SEARCHADDRESSES}` - A list of javascript strings containing the page addresses
+- `{BEGINNAV}` - Begins a code snippet for navigation
+- `{ENDNAV}` - Ends a code snippet for navigation
+- `{NAVNAME}` - The name of the navigation item
+- `{NAVLINK}` - The link of the navigation item
