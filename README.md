@@ -2,6 +2,22 @@
 
 Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wiki which can be read without additional software, and even while offline.
 
+# How does it look?
+
+![](Screenshots/Screenshot1.png?raw=true)
+
+![](Screenshots/Screenshot2.png?raw=true)
+
+# Why should I use this?
+
+Static Wiki's sources for creating the HTML pages are regular Markdown text files. You can use them anywhere else and they will work the same way.
+
+You can also make backups more easily. Want to use `.zip` files? [Git](http://www.github.com) repositories? Post directly to the web?
+
+The web files generated use a base theme that shouldn't require any web resources to display properly, so you can take your files with you and present them to friends or work on your things without requiring an internet connection.
+
+Did I mention it'll look an awful lot better than just a plain text file?
+
 # Instructions
 
 Copy the `Content` folder from the latest release and edit the `staticwiki.ini` file to change your wiki file.
