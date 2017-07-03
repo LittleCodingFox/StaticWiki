@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.IO;
 using StaticWiki;
-using System.Windows.Forms;
+using System.ComponentModel;
+using Ookii.Dialogs.Wpf;
 
 namespace StaticWikiHelper
 {
@@ -29,77 +18,143 @@ namespace StaticWikiHelper
         private string themeFileName;
         private string titleName;
 
+        private const string configurationFileName = "staticwiki.ini";
+        private const string configurationSectionName = "General";
+        private const string configurationSourceDirectoryName = "SourceDir";
+        private const string configurationOutputDirectoryName = "OutputDir";
+        private const string configurationTitleName = "Title";
+        private const string configurationThemeFileName = "ThemeFile";
+
         public MainWindow()
         {
             InitializeComponent();
 
-            Title = "StaticWiki Helper";
+            Title = "Static Wiki Helper";
+
+            Log("Starting Static Wiki");
         }
 
-        private void BrowseSourceDirectory_Click(object sender, RoutedEventArgs e)
+        private string logFileName
         {
-            var openFileDialog = new FolderBrowserDialog();
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            get
             {
-                SourceDirectoryText.Text = openFileDialog.SelectedPath;
+                var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var appFolder = Path.Combine(path, "Static Wiki");
+
+                if (!Directory.Exists(appFolder))
+                {
+                    Directory.CreateDirectory(appFolder);
+                }
+
+                return Path.Combine(appFolder, "StaticWiki.log");
             }
         }
 
-        private void BrowseDestinationDirectory_Click(object sender, RoutedEventArgs e)
+        protected void Log(string message)
         {
-            var openFileDialog = new FolderBrowserDialog();
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            try
             {
-                DestinationDirectoryText.Text = openFileDialog.SelectedPath;
+                StreamWriter writer = null;
+
+                if(!File.Exists(logFileName))
+                {
+                    writer = File.CreateText(logFileName);
+                }
+                else
+                {
+                    writer = File.AppendText(logFileName);
+                }
+
+                if (writer != null)
+                {
+                    writer.Write(string.Format("{0} - {1}\n", DateTime.Now.ToString(), message));
+                }
+
+                writer.Close();
+            }
+            catch(Exception)
+            {
+                return;
             }
         }
 
-        private void BrowseThemeFile_Click(object sender, RoutedEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = Environment.CurrentDirectory;
-
-            if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                ThemeFileNameText.Text = openFileDialog.FileName;
-            }
-        }
-
-        private void WatcherButton_Click(object sender, RoutedEventArgs e)
-        {
-            if(fileSystemWatcher != null)
+            if (fileSystemWatcher != null)
             {
                 fileSystemWatcher.EnableRaisingEvents = false;
                 fileSystemWatcher.Dispose();
                 fileSystemWatcher = null;
-
-                WatcherButton.Content = "Start Watcher";
             }
-            else
+
+            Log("Closing Static Wiki");
+
+            base.OnClosing(e);
+        }
+
+        private void OpenProject(object sender, RoutedEventArgs e)
+        {
+            var dialog = new VistaFolderBrowserDialog();
+            dialog.Description = "Open Project Folder";
+            dialog.ShowNewFolderButton = false;
+            dialog.UseDescriptionForTitle = true;
+
+            if(dialog.ShowDialog(this) == true)
             {
-                if(!Directory.Exists(SourceDirectoryText.Text) || !Directory.Exists(DestinationDirectoryText.Text) || !File.Exists(ThemeFileNameText.Text))
+                var basePath = dialog.SelectedPath;
+
+                Log(string.Format("Attempting to open project at '{0}'", basePath));
+
+                NoProjectLabel.Visibility = Visibility.Visible;
+                ProjectLoadedLabel.Visibility = Visibility.Hidden;
+
+                try
                 {
-                    System.Windows.MessageBox.Show("You need to specify a valid Source folder, Destination folder, and Theme file.", "Invalid paths", MessageBoxButton.OK, MessageBoxImage.Error);
+                    var configPath = Path.Combine(basePath, configurationFileName);
+                    var iniParser = new Ini(configPath);
+
+                    if(iniParser.GetSections().Length == 0)
+                    {
+                        throw new Exception(string.Format("Unable to open '{0}'", configPath));
+                    }
+
+                    sourceDirectory = iniParser.GetValue(configurationSourceDirectoryName, configurationSectionName);
+                    destinationDirectory = iniParser.GetValue(configurationOutputDirectoryName, configurationSectionName);
+                    titleName = iniParser.GetValue(configurationTitleName, configurationSectionName);
+                    themeFileName = iniParser.GetValue(configurationThemeFileName, configurationSectionName);
+                }
+                catch (Exception exception)
+                {
+                    Log(string.Format("Unable to load project due to exception: {0}", exception));
+                    MessageBox.Show("Unable to load project", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    return;
+                }
+
+                sourceDirectory = Path.Combine(basePath, sourceDirectory);
+                destinationDirectory = Path.Combine(basePath, destinationDirectory);
+                themeFileName = Path.Combine(basePath, themeFileName);
+
+                if(!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
+                {
+                    Log(string.Format("Unable to load project due to invalid paths: Source Directory: {0}; Output Directory: {1}; Theme File: {2}", sourceDirectory, destinationDirectory, themeFileName));
+                    MessageBox.Show("Unable to load project due to invalid paths in configuration file", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     return;
                 }
 
                 fileSystemWatcher = new FileSystemWatcher();
-                fileSystemWatcher.Path = SourceDirectoryText.Text;
+                fileSystemWatcher.Path = sourceDirectory;
                 fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;
                 fileSystemWatcher.Filter = "*.md";
                 fileSystemWatcher.Changed += new FileSystemEventHandler(OnChanged);
-
                 fileSystemWatcher.EnableRaisingEvents = true;
 
-                sourceDirectory = SourceDirectoryText.Text;
-                destinationDirectory = DestinationDirectoryText.Text;
-                themeFileName = ThemeFileNameText.Text;
-                titleName = TitleText.Text;
+                Log("Successfully loaded project");
 
-                WatcherButton.Content = "Stop Watcher";
+                NoProjectLabel.Visibility = Visibility.Hidden;
+                ProjectLoadedLabel.Visibility = Visibility.Visible;
+                ProjectLoadedLabel.Content = string.Format("Loaded '{0}'", titleName);
 
                 Process();
             }
@@ -110,6 +165,11 @@ namespace StaticWikiHelper
             var logMessage = "";
 
             StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, titleName, ref logMessage);
+
+            if (logMessage.Length > 0)
+            {
+                Log(string.Format("Static Wiki Message: {0}", logMessage));
+            }
         }
 
         private void OnChanged(object source, FileSystemEventArgs e)

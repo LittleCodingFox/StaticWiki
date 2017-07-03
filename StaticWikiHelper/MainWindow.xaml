@@ -6,29 +6,18 @@
         xmlns:local="clr-namespace:StaticWikiHelper"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    
-    <StackPanel Margin="10">
-        <Label>Source Directory:</Label>
-        <WrapPanel>
-            <TextBox Name="SourceDirectoryText" Width="150" HorizontalAlignment="Left" />
-            <Button Click="BrowseSourceDirectory_Click">Browse</Button>
-        </WrapPanel>
 
-        <Label>Destination Directory:</Label>
-        <WrapPanel>
-            <TextBox Name="DestinationDirectoryText" Width="150" HorizontalAlignment="Left" />
-            <Button Click="BrowseDestinationDirectory_Click">Browse</Button>
-        </WrapPanel>
 
-        <Label>Theme File Name:</Label>
-        <WrapPanel>
-            <TextBox Name="ThemeFileNameText" Width="150" HorizontalAlignment="Left" />
-            <Button Click="BrowseThemeFile_Click">Browse</Button>
-        </WrapPanel>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open" Click="OpenProject"/>
+            </MenuItem>
+        </Menu>
 
-        <Label>Title:</Label>
-        <TextBox Name="TitleText" Width="150" HorizontalAlignment="Left" />
-
-        <Button Name="WatcherButton" Width="100" HorizontalAlignment="Left" Click="WatcherButton_Click">Start Watcher</Button>
-    </StackPanel>
+        <Grid>
+            <Label x:Name="NoProjectLabel" HorizontalAlignment="Center" VerticalAlignment="Center">No Project Loaded</Label>
+            <Label x:Name="ProjectLoadedLabel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden">Project Loaded</Label>
+        </Grid>
+    </DockPanel>
 </Window>
