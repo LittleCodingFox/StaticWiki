@@ -55,8 +55,6 @@ Special sections in themes are:
 
 MIT
 
----
-
-> [littlecodingfox.com](https://www.littlecodingfox.com) &nbsp;&middot;&nbsp;
-> GitHub [@LittleCodingFox](https://github.com/LittleCodingFox) &nbsp;&middot;&nbsp;
-> Twitter [@LittleCodingFox](https://twitter.com/LittleCodingFox)
+[littlecodingfox.com](http://www.littlecodingfox.com) &nbsp;&middot;&nbsp;
+GitHub [@LittleCodingFox](https://github.com/LittleCodingFox) &nbsp;&middot;&nbsp;
+Twitter [@LittleCodingFox](https://twitter.com/LittleCodingFox)
