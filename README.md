@@ -50,3 +50,13 @@ Special sections in themes are:
 - `{ENDNAV}` - Ends a code snippet for navigation
 - `{NAVNAME}` - The name of the navigation item
 - `{NAVLINK}` - The link of the navigation item
+
+# License
+
+MIT
+
+---
+
+> [littlecodingfox.com](https://www.littlecodingfox.com) &nbsp;&middot;&nbsp;
+> GitHub [@LittleCodingFox](https://github.com/LittleCodingFox) &nbsp;&middot;&nbsp;
+> Twitter [@LittleCodingFox](https://twitter.com/LittleCodingFox)
