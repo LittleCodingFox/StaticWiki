@@ -20,7 +20,7 @@ Did I mention it'll look an awful lot better than just a plain text file?
 
 # Instructions
 
-Copy the `Content` folder from the latest release and edit the `staticwiki.ini` file to change your wiki file.
+Copy the `Content` folder from the latest [release](releases) and edit the `staticwiki.ini` file to change your wiki file.
 
 Then, start the `StaticWikiHelper` app, and open the folder you created. You should open the folder that contains the `staticwiki.ini` file, not a sub-folder.
 
