@@ -69,7 +69,6 @@ Special sections in themes are:
 - `{NAVNAME}` - The name of the navigation item
 - `{NAVLINK}` - The link of the navigation item
 - `{ROOT}` - Root folder indicator for theme files
-- 
 
 # License
 
