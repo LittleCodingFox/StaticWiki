@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Ini.cs" />
     <Compile Include="StaticWikiCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

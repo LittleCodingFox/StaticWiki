@@ -14,22 +14,13 @@ namespace StaticWikiHelper
     public partial class MainWindow : Window
     {
         private FileSystemWatcher fileSystemWatcher;
-        private string sourceDirectory;
-        private string destinationDirectory;
-        private string themeFileName;
-        private string titleName;
-        private string navigationFileName;
+
+        private string sourceDirectory = "";
+        private string destinationDirectory = "";
+        private string themeFileName = "";
+        private string titleName = "";
+        private string navigationFileName = "";
         private string[] contentExtensions = new string[0];
-
-        private const string navigationName = "Navigation.list";
-
-        private const string configurationFileName = "staticwiki.ini";
-        private const string configurationSectionName = "General";
-        private const string configurationSourceDirectoryName = "SourceDir";
-        private const string configurationOutputDirectoryName = "OutputDir";
-        private const string configurationTitleName = "Title";
-        private const string configurationThemeFileName = "ThemeFile";
-        private const string configurationContentExtensionsName = "ContentExtensions";
 
         private bool autoUpdatesEnabled = true;
 
@@ -119,45 +110,11 @@ namespace StaticWikiHelper
                 projectLoadedLabel.Visibility = Visibility.Hidden;
                 updateButton.Visibility = Visibility.Hidden;
 
-                try
+                string logMessage = "";
+
+                if(!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions, ref logMessage))
                 {
-                    var configPath = Path.Combine(basePath, configurationFileName);
-                    var iniParser = new Ini(configPath);
-
-                    if(iniParser.GetSections().Length == 0)
-                    {
-                        throw new Exception(string.Format("Unable to open '{0}'", configPath));
-                    }
-
-                    sourceDirectory = iniParser.GetValue(configurationSourceDirectoryName, configurationSectionName);
-                    destinationDirectory = iniParser.GetValue(configurationOutputDirectoryName, configurationSectionName);
-                    titleName = iniParser.GetValue(configurationTitleName, configurationSectionName);
-                    themeFileName = iniParser.GetValue(configurationThemeFileName, configurationSectionName);
-
-                    var contentExtensionsString = iniParser.GetValue(configurationContentExtensionsName, configurationSectionName);
-
-                    if(contentExtensionsString.Length > 0)
-                    {
-                        contentExtensions = contentExtensionsString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log(string.Format("Unable to load project due to exception: {0}", exception));
-                    MessageBox.Show("Unable to load project", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                    return;
-                }
-
-                sourceDirectory = Path.Combine(basePath, sourceDirectory);
-                destinationDirectory = Path.Combine(basePath, destinationDirectory);
-                themeFileName = Path.Combine(basePath, themeFileName);
-                navigationFileName = Path.Combine(basePath, navigationName);
-
-                if(!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
-                {
-                    Log(string.Format("Unable to load project due to invalid paths: Source Directory: {0}; Output Directory: {1}; Theme File: {2}", sourceDirectory, destinationDirectory, themeFileName));
-                    MessageBox.Show("Unable to load project due to invalid paths in configuration file", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Unable to load project details", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     return;
                 }

@@ -13,6 +13,16 @@ namespace StaticWiki
         private const string NavigationFileName = "Navigation";
         private const string SourceFilesExtension = "md";
 
+        private const string navigationName = "Navigation.list";
+
+        private const string configurationFileName = "staticwiki.ini";
+        private const string configurationSectionName = "General";
+        private const string configurationSourceDirectoryName = "SourceDir";
+        private const string configurationOutputDirectoryName = "OutputDir";
+        private const string configurationTitleName = "Title";
+        private const string configurationThemeFileName = "ThemeFile";
+        private const string configurationContentExtensionsName = "ContentExtensions";
+
         private class FileInfo
         {
             public string baseName;
@@ -178,7 +188,7 @@ namespace StaticWiki
                         Directory.CreateDirectory(directory);
                     }
 
-                    File.Copy(file, outName);
+                    File.Copy(file, outName, true);
                 }
             }
             catch(Exception)
@@ -337,7 +347,7 @@ namespace StaticWiki
                 }
             }
 
-            logMessage += string.Format("Copying content files (Extensions are '{0}')", string.Join(", ", contentExtensions.Select(x => string.Format(".{0}", x)).ToArray()));
+            logMessage += string.Format("Copying content files (Extensions are '{0}')\n", string.Join(", ", contentExtensions.Select(x => string.Format(".{0}", x)).ToArray()));
 
             var contentFiles = new string[0];
 
@@ -369,15 +379,73 @@ namespace StaticWiki
                         }
                     }
 
-                    File.Copy(from, to);
+                    File.Copy(from, to, true);
                 }
                 catch (Exception)
                 {
-                    logMessage += string.Format("Unable to copy content file '{0}' (as '{1}'", from, to);
+                    logMessage += string.Format("Unable to copy content file '{0}' (as '{1}'\n", from, to);
                 }
             }
 
             logMessage += "Done\n";
+
+            return true;
+        }
+
+        public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string themeFileName, ref string titleName, ref string navigationFileName,
+            ref string[] contentExtensions, ref string logMessage)
+        {
+            try
+            {
+                var configPath = Path.Combine(workspaceDirectory, configurationFileName);
+                var iniParser = new Ini(configPath);
+
+                if (iniParser.GetSections().Length == 0)
+                {
+                    throw new Exception(string.Format("Unable to open '{0}'\n", configPath));
+                }
+
+                sourceDirectory = iniParser.GetValue(configurationSourceDirectoryName, configurationSectionName);
+                destinationDirectory = iniParser.GetValue(configurationOutputDirectoryName, configurationSectionName);
+                titleName = iniParser.GetValue(configurationTitleName, configurationSectionName);
+                themeFileName = iniParser.GetValue(configurationThemeFileName, configurationSectionName);
+
+                var contentExtensionsString = iniParser.GetValue(configurationContentExtensionsName, configurationSectionName);
+
+                if (contentExtensionsString.Length > 0)
+                {
+                    contentExtensions = contentExtensionsString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
+                }
+            }
+            catch (Exception exception)
+            {
+                logMessage += string.Format("Unable to load project due to exception: {0}\n", exception);
+
+                return false;
+            }
+
+            sourceDirectory = Path.Combine(workspaceDirectory, sourceDirectory);
+            destinationDirectory = Path.Combine(workspaceDirectory, destinationDirectory);
+            themeFileName = Path.Combine(workspaceDirectory, themeFileName);
+            navigationFileName = Path.Combine(workspaceDirectory, navigationName);
+
+            try
+            {
+                if (!Directory.Exists(destinationDirectory))
+                {
+                    Directory.CreateDirectory(destinationDirectory);
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            if(!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
+            {
+                logMessage += string.Format("Unable to load project due to invalid required files or directories\n");
+
+                return false;
+            }
 
             return true;
         }
