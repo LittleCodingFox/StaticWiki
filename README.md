@@ -20,6 +20,7 @@ Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wi
 - Automatically copies theme files to your output directory
 - Minor bugfixes
 - New sample page
+- Updated UI
 
 # Why should I use this?
 

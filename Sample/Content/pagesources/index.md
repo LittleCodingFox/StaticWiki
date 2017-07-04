@@ -18,6 +18,7 @@ You're looking at it right now!
 - Automatically copies theme files to your output directory
 - Minor bugfixes
 - New sample page
+- Updated UI
 
 # Samples
 
