@@ -189,7 +189,7 @@ namespace StaticWikiHelper
         {
             var logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName, ref logMessage);
+            StaticWikiCore.ProcessSubDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName, ref logMessage, 0);
 
             if (logMessage.Length > 0)
             {

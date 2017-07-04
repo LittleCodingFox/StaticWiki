@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace StaticWiki
@@ -191,7 +192,26 @@ namespace StaticWiki
             return true;
         }
 
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
+        public static bool ProcessSubDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage, int recursiveLevel)
+        {
+            string recursivePath = "";
+            for (int i = 0; i < recursiveLevel; i++)
+            {
+                recursivePath += @"../";
+            }
+            recursiveLevel++;
+
+            Directory.CreateDirectory(destinationDirectory);
+            if (!ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, recursivePath, navigationFileName, contentExtensions, baseTitle, ref logMessage)) return false;
+            foreach (var file in Directory.GetDirectories(sourceDirectory))
+            {
+                string newDir = file.Substring(file.LastIndexOf("\\"));
+                if (!ProcessSubDirectory(file, destinationDirectory + newDir, themeFileName, navigationFileName, contentExtensions, baseTitle, ref logMessage, recursiveLevel)) return false;
+            }
+            return true;
+        }
+
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string recursiveThemePath, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
@@ -200,7 +220,7 @@ namespace StaticWiki
 
             try
             {
-                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension), SearchOption.AllDirectories);
+                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension));
             }
             catch (Exception)
             {
@@ -224,6 +244,16 @@ namespace StaticWiki
                 return false;
             }
 
+            if (recursiveThemePath.Length > 0)
+            {
+                int indexOffset = 0;
+                foreach (Match match in Regex.Matches(themeText, @"vendor/"))
+                {
+                    themeText = themeText.Insert(match.Index + indexOffset, recursiveThemePath);
+                    indexOffset += recursiveThemePath.Length;
+                }
+            }
+
             var pageExtension = Path.GetExtension(themeFileName);
 
             try
@@ -237,7 +267,7 @@ namespace StaticWiki
             {
             }
 
-            CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
+            //CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
 
