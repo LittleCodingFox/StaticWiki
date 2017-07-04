@@ -43,6 +43,8 @@ The `Title` option in `staticwiki.ini` is the base page title - The pages genera
 
 Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sample` will become `Page Sample`.
 
+Subdirectories can be used and will change the name of pages to `Title - Page Title (Subdirectory name)`.
+
 Special sections in themes are:
 
 - `{TITLE}` - should be placed on the &lt;title&gt; tag

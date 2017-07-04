@@ -254,16 +254,25 @@ namespace StaticWiki
 
             logMessage += string.Format("Processing {0} files\n", files.Length);
 
-            for (int i = 0; i < files.Length; i++)
+            foreach(var file in files)
             {
-                var baseName = files[i].Substring(sourceDirectory.Length + 1);
+                var baseName = file.Substring(sourceDirectory.Length + 1);
                 baseName = baseName.Substring(0, baseName.LastIndexOf("."));
+
+                var fileName = Path.GetFileName(baseName);
+
+                if (baseName.IndexOf(fileName) > 0)
+                {
+                    var subdirectoryName = baseName.Substring(0, baseName.Length - fileName.Length - 1);
+
+                    baseName = string.Format("{0}_({1})", baseName.Substring(subdirectoryName.Length + 1), subdirectoryName.Replace(" ", "_").Replace("\\", "_").Replace("/", "_"));
+                }
 
                 var outName = Path.Combine(destinationDirectory, baseName + pageExtension);
 
                 try
                 {
-                    var inReader = new StreamReader(files[i]);
+                    var inReader = new StreamReader(file);
                     var content = inReader.ReadToEnd();
 
                     inReader.Close();
@@ -276,7 +285,7 @@ namespace StaticWiki
                 }
                 catch (Exception e)
                 {
-                    logMessage += string.Format("Failed to process file '{0}': {1}\n", files[i], e.Message);
+                    logMessage += string.Format("Failed to process file '{0}': {1}\n", file, e.Message);
 
                     continue;
                 }
@@ -296,9 +305,18 @@ namespace StaticWiki
                 var baseName = files[i].Substring(sourceDirectory.Length + 1);
                 baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
-                var outName = Path.GetFullPath(destinationDirectory + "/" + baseName + pageExtension);
+                var fileName = Path.GetFileName(baseName);
 
-                if (baseName.Equals(NavigationFileName, StringComparison.InvariantCultureIgnoreCase) || !fileCache.ContainsKey(baseName))
+                if (baseName.IndexOf(fileName) > 0)
+                {
+                    var subdirectoryName = baseName.Substring(0, baseName.Length - fileName.Length - 1);
+
+                    baseName = string.Format("{0}_({1})", baseName.Substring(subdirectoryName.Length + 1), subdirectoryName.Replace(" ", "_").Replace("\\", "_").Replace("/", "_"));
+                }
+
+                var outName = Path.Combine(destinationDirectory, baseName + pageExtension);
+
+                if (!fileCache.ContainsKey(baseName))
                     continue;
 
                 logMessage += string.Format("... {0} (as {1})\n", files[i], outName);
@@ -308,15 +326,6 @@ namespace StaticWiki
 
                 try
                 {
-                    var directory = Path.GetDirectoryName(outName);
-
-                    if(!Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    CopyThemeResourcesToFolder(themeFileName, directory, ref logMessage);
-
                     var outWriter = new StreamWriter(outName);
                     outWriter.Write(processedText);
                     outWriter.Flush();
