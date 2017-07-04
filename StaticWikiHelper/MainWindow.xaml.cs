@@ -4,6 +4,7 @@ using System.IO;
 using StaticWiki;
 using System.ComponentModel;
 using Ookii.Dialogs.Wpf;
+using System.Linq;
 
 namespace StaticWikiHelper
 {
@@ -18,6 +19,7 @@ namespace StaticWikiHelper
         private string themeFileName;
         private string titleName;
         private string navigationFileName;
+        private string[] contentExtensions = new string[0];
 
         private const string navigationName = "Navigation.list";
 
@@ -27,6 +29,7 @@ namespace StaticWikiHelper
         private const string configurationOutputDirectoryName = "OutputDir";
         private const string configurationTitleName = "Title";
         private const string configurationThemeFileName = "ThemeFile";
+        private const string configurationContentExtensionsName = "ContentExtensions";
 
         private bool autoUpdatesEnabled = true;
 
@@ -130,6 +133,13 @@ namespace StaticWikiHelper
                     destinationDirectory = iniParser.GetValue(configurationOutputDirectoryName, configurationSectionName);
                     titleName = iniParser.GetValue(configurationTitleName, configurationSectionName);
                     themeFileName = iniParser.GetValue(configurationThemeFileName, configurationSectionName);
+
+                    var contentExtensionsString = iniParser.GetValue(configurationContentExtensionsName, configurationSectionName);
+
+                    if(contentExtensionsString.Length > 0)
+                    {
+                        contentExtensions = contentExtensionsString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -179,7 +189,7 @@ namespace StaticWikiHelper
         {
             var logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, titleName, ref logMessage);
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName, ref logMessage);
 
             if (logMessage.Length > 0)
             {

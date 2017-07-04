@@ -191,7 +191,7 @@ namespace StaticWiki
             return true;
         }
 
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string baseTitle, ref string logMessage)
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
@@ -300,9 +300,9 @@ namespace StaticWiki
                 searchURLs.Add(pair.Value.baseName);
             }
 
-            for (int i = 0; i < files.Length; i++)
+            foreach(var file in files)
             {
-                var baseName = files[i].Substring(sourceDirectory.Length + 1);
+                var baseName = file.Substring(sourceDirectory.Length + 1);
                 baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
                 var fileName = Path.GetFileName(baseName);
@@ -319,7 +319,7 @@ namespace StaticWiki
                 if (!fileCache.ContainsKey(baseName))
                     continue;
 
-                logMessage += string.Format("... {0} (as {1})\n", files[i], outName);
+                logMessage += string.Format("... {0} (as {1})\n", file, outName);
 
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, baseName), navigationInfo, searchNames.ToArray(), searchURLs.ToArray());
@@ -333,7 +333,47 @@ namespace StaticWiki
                 }
                 catch (Exception e)
                 {
-                    logMessage += string.Format("Failed to process file '{0}': {1}\n", files[i], e.Message);
+                    logMessage += string.Format("Failed to process file '{0}': {1}\n", file, e.Message);
+                }
+            }
+
+            logMessage += string.Format("Copying content files (Extensions are '{0}')", string.Join(", ", contentExtensions.Select(x => string.Format(".{0}", x)).ToArray()));
+
+            var contentFiles = new string[0];
+
+            try
+            {
+                contentFiles = Directory.GetFiles(sourceDirectory, "*.*", SearchOption.AllDirectories).Where(x => contentExtensions.Where(y => x.EndsWith(string.Format(".{0}", y))).Any()).ToArray();
+            }
+            catch (Exception)
+            {
+                logMessage += string.Format("StaticWiki failed to find content files at the directory '{0}'. This is not important and will simply be ignored.\n", sourceDirectory);
+            }
+
+            foreach(var file in contentFiles)
+            {
+                var baseName = file.Substring(sourceDirectory.Length + 1);
+                var directoryName = Path.GetDirectoryName(baseName);
+                var from = Path.Combine(sourceDirectory, baseName);
+                var to = Path.Combine(destinationDirectory, baseName);
+
+                try
+                {
+                    if (directoryName.Length > 0)
+                    {
+                        var combinedPath = Path.Combine(destinationDirectory, directoryName);
+
+                        if (!Directory.Exists(combinedPath))
+                        {
+                            Directory.CreateDirectory(combinedPath);
+                        }
+                    }
+
+                    File.Copy(from, to);
+                }
+                catch (Exception)
+                {
+                    logMessage += string.Format("Unable to copy content file '{0}' (as '{1}'", from, to);
                 }
             }
 
