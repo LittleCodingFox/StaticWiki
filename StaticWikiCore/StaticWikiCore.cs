@@ -13,6 +13,7 @@ namespace StaticWiki
     {
         private const string NavigationFileName = "Navigation";
         private const string SourceFilesExtension = "md";
+        private static readonly string[] NonModifiedPaths = { "http" }; // Values that won't get modified to fix path issues (Example: *http*s://www.google.com)
 
         private class FileInfo
         {
@@ -128,8 +129,21 @@ namespace StaticWiki
                     continue;
                 }
 
-                outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(),
-                    recursivePath + pieces[1].Replace("\n", "").Replace("\r", "").Trim()));
+                var navigationPath = pieces[1].Replace("\n", "").Replace("\r", "").Trim();
+                bool hasNonModifiedStrings = false;
+                foreach (string nonModify in NonModifiedPaths)
+                    {
+                        hasNonModifiedStrings = Regex.Match(navigationPath, nonModify).Success;
+                    }
+
+                if (!hasNonModifiedStrings)
+                {
+                    outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(), recursivePath + navigationPath));
+                }
+                else
+                {
+                    outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(), navigationPath));
+                }
             }
 
             return outNavigation;
