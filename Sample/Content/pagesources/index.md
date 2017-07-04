@@ -6,9 +6,22 @@ Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wi
 
 You're looking at it right now!
 
+# What's new
+
+## 1.0.0 pre2
+
+- Subdirectory support
+- Automatically copy images and other content! You can edit the file types in `staticwiki.ini`
+- `Navigation.list` replacing `<source directory>\Navigation.md`
+- Console version that you can run from a terminal
+- Automatically strikes out invalid links
+- Automatically copies theme files to your output directory
+- Minor bugfixes
+- New sample page
+
 # Samples
 
-You can find a markdown sample page [here](Markdown_Sample.html).
+You can find a markdown sample page [here](Samples/Markdown_Sample).
 
 # Why should I use this?
 
@@ -55,6 +68,8 @@ Special sections in themes are:
 - `{ENDNAV}` - Ends a code snippet for navigation
 - `{NAVNAME}` - The name of the navigation item
 - `{NAVLINK}` - The link of the navigation item
+- `{ROOT}` - Root folder indicator for theme files
+- 
 
 # License
 

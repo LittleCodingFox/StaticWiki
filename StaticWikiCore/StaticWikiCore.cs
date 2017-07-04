@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace StaticWiki
@@ -67,7 +68,7 @@ namespace StaticWiki
             }
         }
 
-        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo)
+        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchNames)
         {
             var beginNavIndex = -1;
             var endNavIndex = -1;
@@ -94,7 +95,10 @@ namespace StaticWiki
 
                     for (var j = 0; j < navigationInfo.Count; j++)
                     {
-                        var navItemText = clonedText.Replace("{NAVNAME}", navigationInfo[j].Key).Replace("{NAVLINK}", navigationInfo[j].Value);
+                        var name = navigationInfo[j].Key;
+                        var link = navigationInfo[j].Value;
+
+                        var navItemText = clonedText.Replace("{NAVNAME}", name).Replace("{NAVLINK}", link);
 
                         processedText.Append(navItemText);
                     }
@@ -102,6 +106,7 @@ namespace StaticWiki
                     processedText.Append(finalText.Substring(endNavIndex));
 
                     finalText = processedText.ToString();
+                    finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchNames);
                 }
             }
         }
@@ -113,6 +118,19 @@ namespace StaticWiki
             if (index != -1)
             {
                 finalText = finalText.Substring(0, index) + contentText + finalText.Substring(index + "{CONTENT}".Length);
+            }
+        }
+
+        private static void HandleRootFolderTag(ref string finalText, string currentDirectory)
+        {
+            var index = finalText.IndexOf("{ROOT}");
+            var recursiveBack = currentDirectory.Length > 0 ?
+                string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
+
+            while(index != -1)
+            {
+                finalText = finalText.Substring(0, index) + recursiveBack + finalText.Substring(index + "{ROOT}".Length);
+                index = finalText.IndexOf("{ROOT}");
             }
         }
 
@@ -144,20 +162,65 @@ namespace StaticWiki
             return outNavigation;
         }
 
-        public static string ProcessFile(string sourceText, string themeText, string title, List<KeyValuePair<string, string>> navigationInfo, string[] searchNames, string[] searchURLs)
+        public static string ProcessLinksInContent(string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchNames)
+        {
+            var linkHrefRegex = new Regex("<a href=\"(.*?)\">((?:.(?!\\<\\/a\\>))*.)<\\/a>");
+
+            foreach (Match linkMatch in linkHrefRegex.Matches(content))
+            {
+                if (linkMatch.Groups.Count == 3)
+                {
+                    var urlGroup = linkMatch.Groups[1];
+                    var url = urlGroup.Value.Replace("\\", "/");
+                    var invalid = false;
+
+                    if (!url.Contains("://") && !Directory.Exists(Path.Combine(sourceDirectory, currentDirectory, url)) && !File.Exists(Path.Combine(sourceDirectory, currentDirectory, url)))
+                    {
+                        var recursiveBack = currentDirectory.Length > 0 ?
+                            string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
+
+                        if (searchNames.Where(x => x.EndsWith(url)).Any())
+                        {
+                            url = recursiveBack + searchNames.Where(x => x.EndsWith(url)).FirstOrDefault() + pageExtension;
+                        }
+                        else
+                        {
+                            invalid = true;
+                        }
+
+                        if(invalid)
+                        {
+                            content = content.Replace(linkMatch.Groups[0].Value, string.Format("<del><a href=\"#\">{0}</a></del>", linkMatch.Groups[2].Value));
+                        }
+                        else
+                        {
+                            content = content.Replace(linkMatch.Groups[0].Value, string.Format("<a href=\"{0}\">{1}</a>", url, linkMatch.Groups[2].Value));
+                        }
+                    }
+                }
+            }
+
+            return content;
+        }
+
+        public static string ProcessFile(string sourceText, string themeText, string title, List<KeyValuePair<string, string>> navigationInfo, string[] searchNames, string[] searchURLs,
+            string sourceDirectory, string currentDirectory, string pageExtension)
         {
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
+            var recursiveBack = currentDirectory.Length > 0 ?
+                string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
             var searchNamesString = string.Join(",", searchNames.Select(x => string.Format("\"{0}\"", MarkdownStrippedString(x, pipeline).Replace("\n", ""))).ToArray());
-            var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}\"", x)).ToArray());
-            var contentText = Markdown.ToHtml(sourceText, pipeline);
-            var processedTitle = Markdown.ToHtml(title.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
+            var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}{1}\"", recursiveBack, x)).ToArray());
+            var contentText = ProcessLinksInContent(Markdown.ToHtml(sourceText, pipeline), sourceDirectory, currentDirectory, pageExtension, searchNames);
+            var processedTitle = MarkdownStrippedString(title, pipeline);
 
             var finalText = (string)themeText.Clone();
 
             HandleTitleTag(ref finalText, processedTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
-            HandleNavTags(ref finalText, navigationInfo);
+            HandleNavTags(ref finalText, navigationInfo, sourceDirectory, currentDirectory, pageExtension, searchNames);
             HandleContentTag(ref finalText, contentText);
+            HandleRootFolderTag(ref finalText, currentDirectory);
 
             return finalText;
         }
@@ -201,12 +264,38 @@ namespace StaticWiki
             return true;
         }
 
+        private static void DeleteDestinationContents(string destinationDirectory)
+        {
+            var files = Directory.GetFiles(destinationDirectory);
+            var directories = Directory.GetDirectories(destinationDirectory);
+
+            foreach(var file in files)
+            {
+                File.Delete(file);
+            }
+
+            foreach(var directory in directories)
+            {
+                DeleteDestinationContents(directory);
+            }
+
+            Directory.Delete(destinationDirectory, false);
+        }
+
         public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
             var files = new string[0];
             logMessage = "";
+
+            try
+            {
+                DeleteDestinationContents(destinationDirectory);
+            }
+            catch(Exception)
+            {
+            }
 
             try
             {
@@ -267,16 +356,7 @@ namespace StaticWiki
             foreach(var file in files)
             {
                 var baseName = file.Substring(sourceDirectory.Length + 1);
-                baseName = baseName.Substring(0, baseName.LastIndexOf("."));
-
-                var fileName = Path.GetFileName(baseName);
-
-                if (baseName.IndexOf(fileName) > 0)
-                {
-                    var subdirectoryName = baseName.Substring(0, baseName.Length - fileName.Length - 1);
-
-                    baseName = string.Format("{0}_({1})", baseName.Substring(subdirectoryName.Length + 1), subdirectoryName.Replace(" ", "_").Replace("\\", "_").Replace("/", "_"));
-                }
+                baseName = baseName.Substring(0, baseName.LastIndexOf(".")).Replace("\\", "/");
 
                 var outName = Path.Combine(destinationDirectory, baseName + pageExtension);
 
@@ -313,17 +393,9 @@ namespace StaticWiki
             foreach(var file in files)
             {
                 var baseName = file.Substring(sourceDirectory.Length + 1);
-                baseName = baseName.Substring(0, baseName.LastIndexOf("."));
-
+                baseName = baseName.Substring(0, baseName.LastIndexOf(".")).Replace("\\", "/");
                 var fileName = Path.GetFileName(baseName);
-
-                if (baseName.IndexOf(fileName) > 0)
-                {
-                    var subdirectoryName = baseName.Substring(0, baseName.Length - fileName.Length - 1);
-
-                    baseName = string.Format("{0}_({1})", baseName.Substring(subdirectoryName.Length + 1), subdirectoryName.Replace(" ", "_").Replace("\\", "_").Replace("/", "_"));
-                }
-
+                var directoryName = Path.GetDirectoryName(baseName);
                 var outName = Path.Combine(destinationDirectory, baseName + pageExtension);
 
                 if (!fileCache.ContainsKey(baseName))
@@ -332,10 +404,21 @@ namespace StaticWiki
                 logMessage += string.Format("... {0} (as {1})\n", file, outName);
 
                 var fileInfo = fileCache[baseName];
-                var processedText = ProcessFile(fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, baseName), navigationInfo, searchNames.ToArray(), searchURLs.ToArray());
+                var processedText = ProcessFile(fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, baseName), navigationInfo,
+                    searchNames.ToArray(), searchURLs.ToArray(), sourceDirectory, directoryName, pageExtension);
 
                 try
                 {
+                    if (directoryName.Length > 0)
+                    {
+                        var combinedPath = Path.Combine(destinationDirectory, directoryName);
+
+                        if (!Directory.Exists(combinedPath))
+                        {
+                            Directory.CreateDirectory(combinedPath);
+                        }
+                    }
+
                     var outWriter = new StreamWriter(outName);
                     outWriter.Write(processedText);
                     outWriter.Flush();

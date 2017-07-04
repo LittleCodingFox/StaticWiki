@@ -123,6 +123,8 @@ namespace StaticWikiHelper
                 fileSystemWatcher.Path = sourceDirectory;
                 fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;
                 fileSystemWatcher.Filter = "*.md";
+                fileSystemWatcher.IncludeSubdirectories = true;
+                fileSystemWatcher.Created += new FileSystemEventHandler(OnChanged);
                 fileSystemWatcher.Changed += new FileSystemEventHandler(OnChanged);
                 fileSystemWatcher.EnableRaisingEvents = true;
 
@@ -156,7 +158,7 @@ namespace StaticWikiHelper
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            if (!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
             {
                 return;
             }
@@ -166,7 +168,7 @@ namespace StaticWikiHelper
 
         private void HandleManualUpdate(object source, RoutedEventArgs e)
         {
-            if (!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
+            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName))
             {
                 return;
             }
