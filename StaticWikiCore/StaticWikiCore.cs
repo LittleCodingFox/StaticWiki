@@ -24,7 +24,7 @@ namespace StaticWiki
             return Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
         }
 
-        private static void HandleTextTag(ref string finalText, string processedTitle)
+        private static void HandleTitleTag(ref string finalText, string processedTitle)
         {
             var index = finalText.IndexOf("{TITLE}");
 
@@ -144,12 +144,51 @@ namespace StaticWiki
 
             var finalText = (string)themeText.Clone();
 
-            HandleTextTag(ref finalText, processedTitle);
+            HandleTitleTag(ref finalText, processedTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
             HandleNavTags(ref finalText, navigationInfo);
             HandleContentTag(ref finalText, contentText);
 
             return finalText;
+        }
+
+        public static bool CopyThemeResourcesToFolder(string themeFileName, string destinationDirectory, ref string logMessage)
+        {
+            var files = new string[0];
+            var themeDirectory = Path.GetDirectoryName(themeFileName);
+
+            try
+            {
+                files = Directory.GetFiles(themeDirectory, "*.*", SearchOption.AllDirectories);
+
+                foreach(var file in files)
+                {
+                    if(file == Path.GetFullPath(themeFileName))
+                    {
+                        continue;
+                    }
+
+                    var baseName = file.Substring(themeDirectory.Length + 1);
+                    var outName = Path.Combine(destinationDirectory, baseName);
+
+                    var directory = Path.GetDirectoryName(outName);
+
+                    if(!Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    File.Copy(file, outName);
+                }
+            }
+            catch(Exception)
+            {
+                logMessage += string.Format("StaticWiki failed to copy some theme resources to '{0}'", destinationDirectory);
+
+                return false;
+            }
+
+            return true;
         }
 
         public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string baseTitle, ref string logMessage)
@@ -161,7 +200,7 @@ namespace StaticWiki
 
             try
             {
-                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension));
+                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension), SearchOption.AllDirectories);
             }
             catch (Exception)
             {
@@ -198,6 +237,8 @@ namespace StaticWiki
             {
             }
 
+            CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
+
             var navigationInfo = new List<KeyValuePair<string, string>>();
 
             logMessage += string.Format("Processing {0} files\n", files.Length);
@@ -207,7 +248,7 @@ namespace StaticWiki
                 var baseName = files[i].Substring(sourceDirectory.Length + 1);
                 baseName = baseName.Substring(0, baseName.LastIndexOf("."));
 
-                var outName = destinationDirectory + "/" + baseName + pageExtension;
+                var outName = Path.Combine(destinationDirectory, baseName + pageExtension);
 
                 try
                 {
@@ -263,6 +304,15 @@ namespace StaticWiki
 
                 try
                 {
+                    var directory = Path.GetDirectoryName(outName);
+
+                    if(!Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    CopyThemeResourcesToFolder(themeFileName, directory, ref logMessage);
+
                     var outWriter = new StreamWriter(outName);
                     outWriter.Write(processedText);
                     outWriter.Flush();
