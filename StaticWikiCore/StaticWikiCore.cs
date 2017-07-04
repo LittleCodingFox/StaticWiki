@@ -107,7 +107,7 @@ namespace StaticWiki
             }
         }
 
-        private static List<KeyValuePair<string, string>> ProcessNavigation(string content)
+        private static List<KeyValuePair<string, string>> ProcessNavigation(string content, string recursivePath)
         {
             var outNavigation = new List<KeyValuePair<string, string>>();
             var lines = content.Split("\n".ToCharArray());
@@ -129,7 +129,7 @@ namespace StaticWiki
                 }
 
                 outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(),
-                    pieces[1].Replace("\n", "").Replace("\r", "").Trim()));
+                    recursivePath + pieces[1].Replace("\n", "").Replace("\r", "").Trim()));
             }
 
             return outNavigation;
@@ -194,6 +194,7 @@ namespace StaticWiki
 
         public static bool ProcessSubDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage, int recursiveLevel)
         {
+            // Get the current path of the directory to the root. This gets appended onto many strings to try and keep navigation sane
             string recursivePath = "";
             for (int i = 0; i < recursiveLevel; i++)
             {
@@ -202,11 +203,19 @@ namespace StaticWiki
             recursiveLevel++;
 
             Directory.CreateDirectory(destinationDirectory);
-            if (!ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, recursivePath, navigationFileName, contentExtensions, baseTitle, ref logMessage)) return false;
+            if (!ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, recursivePath, navigationFileName, contentExtensions, baseTitle, ref logMessage))
+            {
+                return false;
+            }
+
             foreach (var file in Directory.GetDirectories(sourceDirectory))
             {
-                string newDir = file.Substring(file.LastIndexOf("\\"));
-                if (!ProcessSubDirectory(file, destinationDirectory + newDir, themeFileName, navigationFileName, contentExtensions, baseTitle, ref logMessage, recursiveLevel)) return false;
+                string newDir = file.Substring(file.LastIndexOf("\\")); // Gets the output directory of the next file to emulate in the HTML output
+                if (!ProcessSubDirectory(file, destinationDirectory + newDir, themeFileName, navigationFileName, contentExtensions, baseTitle, ref logMessage, recursiveLevel))
+                {
+                    return false;
+                }
+
             }
             return true;
         }
@@ -275,7 +284,7 @@ namespace StaticWiki
             {
                 var content = File.ReadAllText(navigationFileName);
 
-                navigationInfo = ProcessNavigation(content);
+                navigationInfo = ProcessNavigation(content, recursiveThemePath);
             }
             catch (Exception)
             {
