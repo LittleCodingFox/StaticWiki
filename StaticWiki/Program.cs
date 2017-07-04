@@ -36,6 +36,7 @@ namespace StaticWiki
             var toDirectory = "./Out/";
             var themeFileName = "";
             var basePageTitle = "TEMPLATE";
+            var navigationFileName = "Navigation.list";
 
             var fileCache = new Dictionary<string, FileInfo>();
 
@@ -57,6 +58,10 @@ namespace StaticWiki
                 {
                     basePageTitle = args[i + 1];
                 }
+                else if(args[i] == "-navigation" && i + 1 < args.Length)
+                {
+                    navigationFileName = args[i + 1];
+                }
             }
 
             Console.WriteLine("StaticWiki starting up with values:");
@@ -67,7 +72,7 @@ namespace StaticWiki
 
             string logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(fromDirectory, toDirectory, themeFileName, basePageTitle, ref logMessage);
+            StaticWikiCore.ProcessDirectory(fromDirectory, toDirectory, themeFileName, navigationFileName, basePageTitle, ref logMessage);
 
             Console.WriteLine(logMessage);
         }

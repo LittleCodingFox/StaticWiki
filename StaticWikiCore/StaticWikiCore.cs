@@ -191,7 +191,7 @@ namespace StaticWiki
             return true;
         }
 
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string baseTitle, ref string logMessage)
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
@@ -241,6 +241,17 @@ namespace StaticWiki
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
 
+            try
+            {
+                var content = File.ReadAllText(navigationFileName);
+
+                navigationInfo = ProcessNavigation(content);
+            }
+            catch (Exception)
+            {
+                logMessage += string.Format("Failed to read navigation info from '{0}'", navigationFileName);
+            }
+
             logMessage += string.Format("Processing {0} files\n", files.Length);
 
             for (int i = 0; i < files.Length; i++)
@@ -257,18 +268,11 @@ namespace StaticWiki
 
                     inReader.Close();
 
-                    if (baseName.Equals(NavigationFileName, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        navigationInfo = ProcessNavigation(content);
-                    }
-                    else
-                    {
-                        var fileInfo = new FileInfo();
-                        fileInfo.baseName = baseName;
-                        fileInfo.text = content;
+                    var fileInfo = new FileInfo();
+                    fileInfo.baseName = baseName;
+                    fileInfo.text = content;
 
-                        fileCache.Add(baseName, fileInfo);
-                    }
+                    fileCache.Add(baseName, fileInfo);
                 }
                 catch (Exception e)
                 {

@@ -17,6 +17,9 @@ namespace StaticWikiHelper
         private string destinationDirectory;
         private string themeFileName;
         private string titleName;
+        private string navigationFileName;
+
+        private const string navigationName = "Navigation.list";
 
         private const string configurationFileName = "staticwiki.ini";
         private const string configurationSectionName = "General";
@@ -134,6 +137,7 @@ namespace StaticWikiHelper
                 sourceDirectory = Path.Combine(basePath, sourceDirectory);
                 destinationDirectory = Path.Combine(basePath, destinationDirectory);
                 themeFileName = Path.Combine(basePath, themeFileName);
+                navigationFileName = Path.Combine(basePath, navigationName);
 
                 if(!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
                 {
@@ -164,7 +168,7 @@ namespace StaticWikiHelper
         {
             var logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, titleName, ref logMessage);
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, titleName, ref logMessage);
 
             if (logMessage.Length > 0)
             {
