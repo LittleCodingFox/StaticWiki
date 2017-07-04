@@ -13,7 +13,7 @@ namespace StaticWiki
     {
         private const string NavigationFileName = "Navigation";
         private const string SourceFilesExtension = "md";
-        private static readonly string[] NonModifiedPaths = { "http" }; // Values that won't get modified to fix path issues (Example: *http*s://www.google.com)
+        private static readonly string[] NonModifiedPaths = { "http://", "https://" }; // Values that won't get modified to fix path issues (Example: *http*s://www.google.com)
 
         private class FileInfo
         {
@@ -133,7 +133,7 @@ namespace StaticWiki
                 bool hasNonModifiedStrings = false;
                 foreach (string nonModify in NonModifiedPaths)
                     {
-                        hasNonModifiedStrings = Regex.Match(navigationPath, nonModify).Success;
+                        hasNonModifiedStrings = Regex.Match(navigationPath.Substring(0, nonModify.Length), nonModify).Success;
                     }
 
                 if (!hasNonModifiedStrings)
