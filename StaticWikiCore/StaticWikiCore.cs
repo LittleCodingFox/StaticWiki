@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace StaticWiki
@@ -12,6 +13,7 @@ namespace StaticWiki
     {
         private const string NavigationFileName = "Navigation";
         private const string SourceFilesExtension = "md";
+        private static readonly string[] NonModifiedPaths = { ":/" }; // Values that won't get modified to fix path issues (Example: *http*s://www.google.com)
 
         private const string navigationName = "Navigation.list";
 
@@ -116,7 +118,7 @@ namespace StaticWiki
             }
         }
 
-        private static List<KeyValuePair<string, string>> ProcessNavigation(string content)
+        private static List<KeyValuePair<string, string>> ProcessNavigation(string content, string recursivePath)
         {
             var outNavigation = new List<KeyValuePair<string, string>>();
             var lines = content.Split("\n".ToCharArray());
@@ -137,8 +139,21 @@ namespace StaticWiki
                     continue;
                 }
 
-                outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(),
-                    pieces[1].Replace("\n", "").Replace("\r", "").Trim()));
+                var navigationPath = pieces[1].Replace("\n", "").Replace("\r", "").Trim();
+                bool hasNonModifiedStrings = false;
+                foreach (string nonModify in NonModifiedPaths)
+                {
+                    hasNonModifiedStrings = Regex.Match(navigationPath, nonModify).Success;
+                }
+
+                if (!hasNonModifiedStrings)
+                {
+                    outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(), recursivePath + navigationPath));
+                }
+                else
+                {
+                    outNavigation.Add(new KeyValuePair<string, string>(pieces[0].Replace("\n", "").Replace("\r", "").Trim(), navigationPath));
+                }
             }
 
             return outNavigation;
@@ -201,7 +216,35 @@ namespace StaticWiki
             return true;
         }
 
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
+        public static bool ProcessSubDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage, int recursiveLevel)
+        {
+            // Get the current path of the directory to the root. This gets appended onto many strings to try and keep navigation sane
+            string recursivePath = "";
+            for (int i = 0; i < recursiveLevel; i++)
+            {
+                recursivePath += @"../";
+            }
+            recursiveLevel++;
+
+            Directory.CreateDirectory(destinationDirectory);
+            if (!ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, recursivePath, navigationFileName, contentExtensions, baseTitle, ref logMessage))
+            {
+                return false;
+            }
+
+            foreach (var file in Directory.GetDirectories(sourceDirectory))
+            {
+                string newDir = file.Substring(file.LastIndexOf("\\")); // Gets the output directory of the next file to emulate in the HTML output
+                if (!ProcessSubDirectory(file, destinationDirectory + newDir, themeFileName, navigationFileName, contentExtensions, baseTitle, ref logMessage, recursiveLevel))
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string recursiveThemePath, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
@@ -210,7 +253,7 @@ namespace StaticWiki
 
             try
             {
-                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension), SearchOption.AllDirectories);
+                files = Directory.GetFiles(sourceDirectory, string.Format("*.{0}", SourceFilesExtension));
             }
             catch (Exception)
             {
@@ -234,6 +277,16 @@ namespace StaticWiki
                 return false;
             }
 
+            if (recursiveThemePath.Length > 0)
+            {
+                int indexOffset = 0;
+                foreach (Match match in Regex.Matches(themeText, @"vendor/"))
+                {
+                    themeText = themeText.Insert(match.Index + indexOffset, recursiveThemePath);
+                    indexOffset += recursiveThemePath.Length;
+                }
+            }
+
             var pageExtension = Path.GetExtension(themeFileName);
 
             try
@@ -247,7 +300,7 @@ namespace StaticWiki
             {
             }
 
-            CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
+            //CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
 
@@ -255,7 +308,7 @@ namespace StaticWiki
             {
                 var content = File.ReadAllText(navigationFileName);
 
-                navigationInfo = ProcessNavigation(content);
+                navigationInfo = ProcessNavigation(content, recursiveThemePath);
             }
             catch (Exception)
             {
