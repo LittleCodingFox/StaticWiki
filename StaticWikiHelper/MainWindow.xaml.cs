@@ -28,11 +28,15 @@ namespace StaticWikiHelper
         private const string configurationTitleName = "Title";
         private const string configurationThemeFileName = "ThemeFile";
 
+        private bool autoUpdatesEnabled = true;
+
         public MainWindow()
         {
             InitializeComponent();
 
             Title = "Static Wiki Helper";
+
+            updateButton.Visibility = Visibility.Hidden;
 
             Log("Starting Static Wiki");
         }
@@ -108,8 +112,9 @@ namespace StaticWikiHelper
 
                 Log(string.Format("Attempting to open project at '{0}'", basePath));
 
-                NoProjectLabel.Visibility = Visibility.Visible;
-                ProjectLoadedLabel.Visibility = Visibility.Hidden;
+                noProjectLabel.Visibility = Visibility.Visible;
+                projectLoadedLabel.Visibility = Visibility.Hidden;
+                updateButton.Visibility = Visibility.Hidden;
 
                 try
                 {
@@ -156,11 +161,17 @@ namespace StaticWikiHelper
 
                 Log("Successfully loaded project");
 
-                NoProjectLabel.Visibility = Visibility.Hidden;
-                ProjectLoadedLabel.Visibility = Visibility.Visible;
-                ProjectLoadedLabel.Content = string.Format("Loaded '{0}'", titleName);
+                noProjectLabel.Visibility = Visibility.Hidden;
 
-                Process();
+                projectLoadedLabel.Visibility = Visibility.Visible;
+                projectLoadedLabel.Content = string.Format("Loaded '{0}'", titleName);
+
+                updateButton.Visibility = Visibility.Visible;
+
+                if(autoUpdatesEnabled)
+                {
+                    Process();
+                }
             }
         }
 
@@ -178,12 +189,32 @@ namespace StaticWikiHelper
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {
+            if (!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+            {
+                return;
+            }
+
+            Process();
+        }
+
+        private void HandleManualUpdate(object source, RoutedEventArgs e)
+        {
             if (!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
             {
                 return;
             }
 
             Process();
+        }
+
+        private void EnableAutoUpdates(object source, RoutedEventArgs e)
+        {
+            autoUpdatesEnabled = true;
+        }
+
+        private void DisableAutoUpdates(object source, RoutedEventArgs e)
+        {
+            autoUpdatesEnabled = false;
         }
     }
 }

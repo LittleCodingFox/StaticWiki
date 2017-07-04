@@ -16,8 +16,10 @@
         </Menu>
 
         <Grid>
-            <Label x:Name="NoProjectLabel" HorizontalAlignment="Center" VerticalAlignment="Center">No Project Loaded</Label>
-            <Label x:Name="ProjectLoadedLabel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden">Project Loaded</Label>
+            <Label x:Name="noProjectLabel" HorizontalAlignment="Center" VerticalAlignment="Center">No Project Loaded</Label>
+            <Label x:Name="projectLoadedLabel" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Hidden">Project Loaded</Label>
+            <CheckBox x:Name="autoUpdateCheckbox" Checked="EnableAutoUpdates" Unchecked="DisableAutoUpdates" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10, 15" Width="150" IsChecked="True">Enable auto updates</CheckBox>
+            <Button x:Name="updateButton" Click="HandleManualUpdate" Width="100" Height="30" VerticalAlignment="Bottom" Margin="10">Update now</Button>
         </Grid>
     </DockPanel>
 </Window>
