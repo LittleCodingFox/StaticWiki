@@ -10,6 +10,9 @@ Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wi
 
 # What's new
 
+## 1.0.0 pre3
+- Categories support
+
 ## 1.0.0 pre2
 
 - Subdirectory support
