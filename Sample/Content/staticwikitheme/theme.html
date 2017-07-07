@@ -138,7 +138,26 @@
 		<div class="flexwrapper">
 			<div class="flexhandler">
 				<div class="item">
-					{CONTENT}
+					<div class="col-sm-12">
+						{BEGINIFCATEGORIES}
+						<span>
+						<strong>Categories</strong>
+							{BEGINPAGECATEGORIES}
+								<a href="{CATEGORYLINK}">{CATEGORYNAME}</a>
+							{ENDPAGECATEGORIES}
+						</span>
+						{ENDIFCATEGORIES}
+
+						{CONTENT}
+						
+						{BEGINCATEGORYLIST}
+						<h1>{BASENAME}</h1>
+						<hr />
+							{BEGINPAGECATEGORIES}
+								<a href="{CATEGORYLINK}"><strong>{CATEGORYNAME}</strong></a><br />
+							{ENDPAGECATEGORIES}
+						{ENDCATEGORYLIST}
+					</div>
 				</div>
 			</div>
 		</div>

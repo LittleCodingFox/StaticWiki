@@ -1,3 +1,4 @@
+[categories]Sample, Markdown[/categories]
 # Markdown Sample
 
 (Adapted from [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet))
@@ -239,7 +240,7 @@ Quote break.
   <dd>Does *not* work **very** well. Use HTML <em>tags</em>.</dd>
 </dl>
 
-# Horizontal Rule (may not be visible if you're using the default Bootstrap theme)
+# Horizontal Rule
 
 ```
 Three or more...
