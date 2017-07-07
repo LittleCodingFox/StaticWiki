@@ -63,6 +63,7 @@ Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sa
 Subdirectories can be used and will change the name of pages to `Title - Page Title (Subdirectory name)`.
 
 Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
+Additionally, you can create category pages in your sources (with their name in form of `Category_name`) to add some content to your category page.
 
 Special sections in themes are:
 
@@ -75,6 +76,15 @@ Special sections in themes are:
 - `{NAVNAME}` - The name of the navigation item
 - `{NAVLINK}` - The link of the navigation item
 - `{ROOT}` - Root folder indicator for theme files
+- `{BEGINPAGECATEGORIES}` - Begins a code snippet for inserting a page's categories
+- `{ENDPAGECATEGORIES}` - Ends a code snippet for a page's categories
+- `{BEGINCATEGORYLIST}` - Begins the list of a category page's contents
+- `{ENDCATEGORYLIST}` - Ends the list of a category page's contents
+- `{CATEGORYNAME}`- The name of a category
+- `{CATEGORYLINK}` - The link to a category
+- `{BEGINIFCATEGORIES}` - Begins a code snippet if the page has categories
+- `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
+- `{BASENAME}` - The name of the current file
 
 # License
 

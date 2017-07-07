@@ -54,6 +54,7 @@ namespace StaticWiki
         private class FileInfo
         {
             public string baseName;
+            public string saneBaseName;
             public string text;
         }
 
@@ -615,6 +616,7 @@ namespace StaticWiki
 
                     var fileInfo = new FileInfo();
                     fileInfo.baseName = baseName;
+                    fileInfo.saneBaseName = SaneFileName(baseName);
                     fileInfo.text = content;
 
                     fileCache.Add(baseName, fileInfo);
@@ -639,18 +641,32 @@ namespace StaticWiki
             foreach (var categoryName in categoriesDictionary.Keys)
             {
                 var formattedCategoryName = FormattedCategoryName(categoryName);
+                var saneCategoryName = SaneFileName(formattedCategoryName);
 
                 searchNames.Add(formattedCategoryName);
-                searchURLs.Add(SaneFileName(formattedCategoryName));
+                searchURLs.Add(saneCategoryName);
 
                 //Make sure category lists are created
-                if (!fileCache.Where(x => x.Key == formattedCategoryName).Any())
+                if (!fileCache.Where(x => x.Value.baseName == formattedCategoryName).Any())
                 {
-                    fileCache.Add(formattedCategoryName, new FileInfo()
+                    if(!fileCache.Where(x => x.Value.saneBaseName == saneCategoryName).Any())
                     {
-                        baseName = formattedCategoryName,
-                        text = ""
-                    });
+                        fileCache.Add(formattedCategoryName, new FileInfo()
+                        {
+                            baseName = formattedCategoryName,
+                            saneBaseName = saneCategoryName,
+                            text = ""
+                        });
+                    }
+                    else
+                    {
+                        fileCache.Add(formattedCategoryName, new FileInfo()
+                        {
+                            baseName = formattedCategoryName,
+                            saneBaseName = saneCategoryName,
+                            text = ""
+                        });
+                    }
                 }
             }
 
@@ -659,16 +675,24 @@ namespace StaticWiki
                 var baseName = file;
                 var fileName = Path.GetFileName(baseName);
                 var directoryName = Path.GetDirectoryName(baseName);
+                var saneBaseName = SaneFileName(baseName);
                 var outName = Path.Combine(destinationDirectory, SaneFileName(baseName) + pageExtension);
 
                 logMessage += string.Format("... {0} (as {1})\n", file, outName);
 
                 var categoryInfo = new List<KeyValuePair<string, string>>();
-                var isCategoryPage = baseName.StartsWith(categoryPrefix);
+                var isCategoryPage = saneBaseName.StartsWith(SaneFileName(categoryPrefix));
+
+                //If we're a category page and our base name doesn't match, then that means we're a generated category page.
+                //If there is another file whose baseName is equal to our sane base name, then there exists a page that should override the generated one. Skip this one.
+                if(isCategoryPage && baseName != saneBaseName && fileCache.Where(x => x.Value.baseName == saneBaseName).Any())
+                {
+                    continue;
+                }
 
                 if(isCategoryPage)
                 {
-                    var unformattedCategoryName = baseName.Replace(categoryPrefix, "");
+                    var unformattedCategoryName = saneBaseName.Replace(SaneFileName(categoryPrefix), "");
 
                     if (categoriesDictionary.ContainsKey(unformattedCategoryName))
                     {
