@@ -8,6 +8,9 @@ You're looking at it right now!
 
 # What's new
 
+## 1.0.0 pre3
+- Categories support
+
 ## 1.0.0 pre2
 
 - Subdirectory support
@@ -58,6 +61,8 @@ The `Title` option in `staticwiki.ini` is the base page title - The pages genera
 Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sample` will become `Page Sample`.
 
 Subdirectories can be used and will change the name of pages to `Title - Page Title (Subdirectory name)`.
+
+Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
 
 Special sections in themes are:
 

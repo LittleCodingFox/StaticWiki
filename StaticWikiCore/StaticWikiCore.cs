@@ -591,7 +591,7 @@ namespace StaticWiki
 
                     foreach (Match match in categoriesRegex.Matches(content))
                     {
-                        if (match.Groups.Count == 2)
+                        if (match.Index == 0 && match.Groups.Count == 2)
                         {
                             var categoriesString = match.Groups[1].Value;
                             var categoryBits = categoriesString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
@@ -608,9 +608,9 @@ namespace StaticWiki
                                     categoriesDictionary[categoryName].Add(baseName);
                                 }
                             }
-                        }
 
-                        content = content.Replace(match.Groups[0].Value, "");
+                            content = content.Replace(match.Groups[0].Value, "");
+                        }
                     }
 
                     var fileInfo = new FileInfo();
