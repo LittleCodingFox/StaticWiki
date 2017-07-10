@@ -11,8 +11,10 @@ You're looking at it right now!
 
 ## 1.0.0 pre4
 - Page title support and `{PAGETITLE}` support for themes
-- Minor bug fixes to category pages
-- 
+- Minor bug fixes to category pages and the search function
+- Minor bug fixes to link correction so it's as generic as possible when correcting
+- Fixed tags being processed together with Page Content instead of only Theme Content
+- Fixed Helper app to properly detect file creation, deletion, and renaming
 
 ## 1.0.0 pre3
 - Categories support
@@ -69,7 +71,9 @@ Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sa
 Subdirectories can be used and will change the name of pages to `Title - Page Title (Subdirectory name)`.
 
 Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
-Additionally, you can create category pages in your sources (with their name in form of `Category_name`) to add some content to your category page.
+Additionally, you can create category pages in your sources (with their name in the form of `Category_name`) to add some content to your category page.
+
+Pages can have a custom title by adding using the `[title]` tag. For example, `[title]My title[/title}`.
 
 Special sections in themes are:
 
@@ -91,6 +95,7 @@ Special sections in themes are:
 - `{BEGINIFCATEGORIES}` - Begins a code snippet if the page has categories
 - `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
 - `{BASENAME}` - The name of the current file
+- `{PAGETITLE}` - The title of the current file
 
 # License
 

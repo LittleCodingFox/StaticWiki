@@ -121,11 +121,13 @@ namespace StaticWikiHelper
 
                 fileSystemWatcher = new FileSystemWatcher();
                 fileSystemWatcher.Path = sourceDirectory;
-                fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime;
                 fileSystemWatcher.Filter = "*.md";
                 fileSystemWatcher.IncludeSubdirectories = true;
                 fileSystemWatcher.Created += new FileSystemEventHandler(OnChanged);
+                fileSystemWatcher.Deleted += new FileSystemEventHandler(OnChanged);
                 fileSystemWatcher.Changed += new FileSystemEventHandler(OnChanged);
+                fileSystemWatcher.Renamed += new RenamedEventHandler(OnRenamed);
                 fileSystemWatcher.EnableRaisingEvents = true;
 
                 Log("Successfully loaded project");
@@ -157,6 +159,16 @@ namespace StaticWikiHelper
         }
 
         private void OnChanged(object source, FileSystemEventArgs e)
+        {
+            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+            {
+                return;
+            }
+
+            Process();
+        }
+
+        private void OnRenamed(object source, RenamedEventArgs e)
         {
             if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
             {

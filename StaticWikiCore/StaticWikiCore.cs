@@ -469,16 +469,16 @@ namespace StaticWiki
                     var urlGroup = linkMatch.Groups[1];
                     var url = urlGroup.Value.Replace("\\", "/");
                     var invalid = false;
-                    var filePath = url.Contains("://") ? url : Path.Combine(sourceDirectory, currentDirectory, url);
+                    var filePath = url.Contains("://") ? url : Path.Combine(sourceDirectory, currentDirectory, SaneFileName(url));
 
                     if (!url.Contains("://") && !Directory.Exists(filePath) && !File.Exists(filePath))
                     {
                         var recursiveBack = currentDirectory.Length > 0 ?
                             string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
 
-                        if (searchURLs.Where(x => x.EndsWith(url)).Any())
+                        if (searchURLs.Where(x => x.EndsWith(SaneFileName(url))).Any())
                         {
-                            url = recursiveBack + SaneFileName(searchURLs.Where(x => x.EndsWith(url)).FirstOrDefault()) + pageExtension;
+                            url = recursiveBack + SaneFileName(searchURLs.Where(x => x.EndsWith(SaneFileName(url))).FirstOrDefault()) + pageExtension;
                         }
                         else
                         {
@@ -487,7 +487,7 @@ namespace StaticWiki
 
                         if (invalid)
                         {
-                            content = content.Replace(linkMatch.Groups[0].Value, string.Format("<del><a href=\"#\">{0}</a></del>", linkMatch.Groups[2].Value));
+                            content = content.Replace(linkMatch.Groups[0].Value, string.Format("<a href=\"#\">{0}</a>", linkMatch.Groups[2].Value));
                         }
                         else
                         {
@@ -572,8 +572,8 @@ namespace StaticWiki
             HandleNavTags(ref finalText, navigationInfo);
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
             HandleBasenameTag(ref finalText, baseName);
-            HandleContentTag(ref finalText, contentText);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
+            HandleContentTag(ref finalText, contentText);
 
             finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchURLs);
 
@@ -773,7 +773,7 @@ namespace StaticWiki
 
                     foreach (Match match in titleRegex.Matches(content))
                     {
-                        if (match.Groups.Count == 2)
+                        if (match.Groups.Count == 2 && (match.Groups[0].Index == 0 || content[match.Groups[0].Index - 1] == '\n'))
                         {
                             title = match.Groups[1].Value;
                             content = content.Replace(match.Groups[0].Value, "");
