@@ -35,6 +35,7 @@ namespace StaticWiki
         private const string beginIfCategoriesThemeTag = "{BEGINIFCATEGORIES}";
         private const string endIfCategoriesThemeTag = "{ENDIFCATEGORIES}";
         private const string baseNameThemeTag = "{BASENAME}";
+        private const string pageTitleThemeTag = "{PAGETITLE}";
         #endregion
 
         #region Misc Constants
@@ -51,23 +52,58 @@ namespace StaticWiki
         private const string configurationContentExtensionsName = "ContentExtensions";
         #endregion
 
+        /// <summary>
+        /// Contains details on a wiki page file
+        /// </summary>
         private class FileInfo
         {
+            /// <summary>
+            /// The page's title
+            /// </summary>
+            public string pageTitle;
+
+            /// <summary>
+            /// The name of this page
+            /// </summary>
             public string baseName;
+
+            /// <summary>
+            /// The name of this page formatted into a file name
+            /// </summary>
             public string saneBaseName;
+
+            /// <summary>
+            /// The text of this page
+            /// </summary>
             public string text;
         }
 
+        /// <summary>
+        /// Strips a Markdown string by removing fake whitespace ("_") and removing Paragraph (<p>) tags
+        /// </summary>
+        /// <param name="markdownString">The string to strip</param>
+        /// <param name="pipeline">The markdown pipeline to use</param>
+        /// <returns>The stripped string</returns>
         private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
         {
             return Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
         }
 
+        /// <summary>
+        /// Formats a category name into an proper search name by prefixing it with the category prefix and replacing directory separations into "_"
+        /// </summary>
+        /// <param name="categoryName">The name of the category</param>
+        /// <returns>The formatted category name</returns>
         private static string FormattedCategoryName(string categoryName)
         {
             return string.Format("{0}{1}", categoryPrefix, categoryName.Replace("\\", "/").Replace("/", "_").Replace(" ", "_"));
         }
 
+        /// <summary>
+        /// Sanitizes a file name by replacing invalid characters with "_"'s
+        /// </summary>
+        /// <param name="fileName">The file name</param>
+        /// <returns>The sane file name</returns>
         private static string SaneFileName(string fileName)
         {
             string invalidCharacters = Regex.Escape(new string(Path.GetInvalidFileNameChars().Where(x => x != '/' && x != '\\').ToArray()));
@@ -76,6 +112,11 @@ namespace StaticWiki
             return Regex.Replace(fileName, invalidRegexString, "_");
         }
 
+        /// <summary>
+        /// Handles the Title tag for the current output text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="processedTitle">The title we are to use</param>
         private static void HandleTitleTag(ref string finalText, string processedTitle)
         {
             var index = finalText.IndexOf(titleThemeTag);
@@ -88,6 +129,29 @@ namespace StaticWiki
             }
         }
 
+        /// <summary>
+        /// Handles the Page Title tag for the current output text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="processedTitle">The title we are to use</param>
+        private static void HandlePageTitleTag(ref string finalText, string processedTitle)
+        {
+            var index = finalText.IndexOf(pageTitleThemeTag);
+
+            while (index != -1)
+            {
+                finalText = finalText.Substring(0, index) + processedTitle + finalText.Substring(index + pageTitleThemeTag.Length);
+
+                index = finalText.IndexOf(pageTitleThemeTag);
+            }
+        }
+
+        /// <summary>
+        /// Handles the Search tags for the current output text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="searchNames">The names of the search pages as a single string</param>
+        /// <param name="searchURLs">The URLs of the search pages as a single string</param>
         private static void HandleSearchTags(ref string finalText, string searchNames, string searchURLs)
         {
             var index = finalText.IndexOf(searchNamesThemeTag);
@@ -109,48 +173,62 @@ namespace StaticWiki
             }
         }
 
-        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchNames)
+        /// <summary>
+        /// Handles navigation details for the navigation bar for the current output text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="navigationInfo">The navigation details using a list of Key Value Pairs where the Key is the Name and the Value is the URL</param>
+        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo)
         {
             var beginNavIndex = -1;
             var endNavIndex = -1;
 
             var index = finalText.IndexOf(beginNavigationThemeTag);
 
-            if (index != -1)
+            if (index == -1)
             {
-                finalText = finalText.Substring(0, index) + finalText.Substring(index + beginNavigationThemeTag.Length);
-                beginNavIndex = index;
+                return;
             }
+
+            finalText = finalText.Substring(0, index) + finalText.Substring(index + beginNavigationThemeTag.Length);
+            beginNavIndex = index;
 
             index = finalText.IndexOf(endNavigationThemeTag);
 
-            if (index != -1)
+            if (index == -1)
             {
-                finalText = finalText.Substring(0, index) + finalText.Substring(index + endNavigationThemeTag.Length);
-                endNavIndex = index;
+                return;
+            }
 
-                if (beginNavIndex != -1)
+            finalText = finalText.Substring(0, index) + finalText.Substring(index + endNavigationThemeTag.Length);
+            endNavIndex = index;
+
+            if (beginNavIndex != -1)
+            {
+                var clonedText = finalText.Substring(beginNavIndex, endNavIndex - beginNavIndex);
+                var processedText = new StringBuilder(finalText.Substring(0, beginNavIndex));
+
+                for (var j = 0; j < navigationInfo.Count; j++)
                 {
-                    var clonedText = finalText.Substring(beginNavIndex, endNavIndex - beginNavIndex);
-                    var processedText = new StringBuilder(finalText.Substring(0, beginNavIndex));
+                    var name = navigationInfo[j].Key;
+                    var link = navigationInfo[j].Value.Contains("://") ? navigationInfo[j].Value : SaneFileName(navigationInfo[j].Value);
 
-                    for (var j = 0; j < navigationInfo.Count; j++)
-                    {
-                        var name = navigationInfo[j].Key;
-                        var link = navigationInfo[j].Value.Contains("://") ? navigationInfo[j].Value : SaneFileName(navigationInfo[j].Value);
+                    var navItemText = clonedText.Replace(navigationNameThemeTag, name).Replace(navigationLinkThemeTag, link);
 
-                        var navItemText = clonedText.Replace(navigationNameThemeTag, name).Replace(navigationLinkThemeTag, link);
-
-                        processedText.Append(navItemText);
-                    }
-
-                    processedText.Append(finalText.Substring(endNavIndex));
-
-                    finalText = processedText.ToString();
+                    processedText.Append(navItemText);
                 }
+
+                processedText.Append(finalText.Substring(endNavIndex));
+
+                finalText = processedText.ToString();
             }
         }
 
+        /// <summary>
+        /// Handles the Content tag for the current output text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="contentText">Our content text</param>
         private static void HandleContentTag(ref string finalText, string contentText)
         {
             var index = finalText.IndexOf(contentThemeTag);
@@ -161,8 +239,14 @@ namespace StaticWiki
             }
         }
 
-        private static void HandleCategoryPageTags(ref string finalText, string baseName, List<KeyValuePair<string, string>> categoriesInfo, bool isCategories, string sourceDirectory,
-            string currentDirectory, string pageExtension, string[] searchNames)
+        /// <summary>
+        /// Handles the tags for a category page
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="baseName">The name of this page</param>
+        /// <param name="categoriesInfo">The details of the pages in this category, stored as a Key Value Pair, where the Key is the name and the Value is the URL</param>
+        /// <param name="isCategories">Whether we are actually a category page</param>
+        private static void HandleCategoryPageTags(ref string finalText, string baseName, List<KeyValuePair<string, string>> categoriesInfo, bool isCategories)
         {
             var beginCategoryPageIndex = -1;
             var endCategoryPageIndex = -1;
@@ -241,10 +325,16 @@ namespace StaticWiki
             finalText = finalText.Substring(0, beginCategoryPageIndex) + clonedText + finalText.Substring(endCategoryPageIndex);
         }
 
-        private static void HandleCategoryTags(ref string finalText, string baseName, List<KeyValuePair<string, string>> categoriesInfo, bool isCategories, string sourceDirectory,
-            string currentDirectory, string pageExtension, string[] searchNames)
+        /// <summary>
+        /// Handles the Category tags in a page
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="baseName">The name of this page</param>
+        /// <param name="categoriesInfo">The details of the pages in this category, stored as a Key Value Pair, where the Key is the name and the Value is the URL</param>
+        /// <param name="isCategories">Whether we are actually a category page</param>
+        private static void HandleCategoryTags(ref string finalText, string baseName, List<KeyValuePair<string, string>> categoriesInfo, bool isCategories)
         {
-            HandleCategoryPageTags(ref finalText, baseName, categoriesInfo, isCategories, sourceDirectory, currentDirectory, pageExtension, searchNames);
+            HandleCategoryPageTags(ref finalText, baseName, categoriesInfo, isCategories);
 
             var beginIfCategoriesIndex = -1;
             var endIfCategoriesIndex = -1;
@@ -324,6 +414,11 @@ namespace StaticWiki
             finalText = finalText.Substring(0, beginIfCategoriesIndex) + clonedText + finalText.Substring(endIfCategoriesIndex);
         }
 
+        /// <summary>
+        /// Handles the root directory tag from the current finalized text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="currentDirectory">Our current directory</param>
         private static void HandleRootDirectoryTag(ref string finalText, string currentDirectory)
         {
             var index = finalText.IndexOf(rootDirectoryThemeTag);
@@ -337,6 +432,11 @@ namespace StaticWiki
             }
         }
 
+        /// <summary>
+        /// Handles the basename tag from the current finalized text
+        /// </summary>
+        /// <param name="finalText">Our current finalized text</param>
+        /// <param name="baseName">The base name of the current page</param>
         private static void HandleBasenameTag(ref string finalText, string baseName)
         {
             var index = finalText.IndexOf(baseNameThemeTag);
@@ -349,6 +449,15 @@ namespace StaticWiki
             }
         }
 
+        /// <summary>
+        /// Processes links in content by validating whether they exist and replacing them properly or marking them as invalid
+        /// </summary>
+        /// <param name="content">The content text</param>
+        /// <param name="sourceDirectory">Our current source directory</param>
+        /// <param name="currentDirectory">Our current directory</param>
+        /// <param name="pageExtension">Our page extension</param>
+        /// <param name="searchURLs">Our search URLs</param>
+        /// <returns>The processed links</returns>
         private static string ProcessLinksInContent(string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchURLs)
         {
             var linkHrefRegex = new Regex("<a href=\"(.*?)\">((?:.(?!\\<\\/a\\>))*.)<\\/a>");
@@ -360,8 +469,9 @@ namespace StaticWiki
                     var urlGroup = linkMatch.Groups[1];
                     var url = urlGroup.Value.Replace("\\", "/");
                     var invalid = false;
+                    var filePath = url.Contains("://") ? url : Path.Combine(sourceDirectory, currentDirectory, url);
 
-                    if (!url.Contains("://") && !Directory.Exists(Path.Combine(sourceDirectory, currentDirectory, url)) && !File.Exists(Path.Combine(sourceDirectory, currentDirectory, url)))
+                    if (!url.Contains("://") && !Directory.Exists(filePath) && !File.Exists(filePath))
                     {
                         var recursiveBack = currentDirectory.Length > 0 ?
                             string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
@@ -390,7 +500,12 @@ namespace StaticWiki
             return content;
         }
 
-        private static List<KeyValuePair<string, string>> ProcessNavigation(string content)
+        /// <summary>
+        /// Processes the navigation file
+        /// </summary>
+        /// <param name="content">The file's contents</param>
+        /// <returns>The processed navigation data</returns>
+        private static List<KeyValuePair<string, string>> ProcessNavigationFileContent(string content, ref string logMessage)
         {
             var outNavigation = new List<KeyValuePair<string, string>>();
             var lines = content.Split("\n".ToCharArray());
@@ -406,7 +521,7 @@ namespace StaticWiki
 
                 if (pieces.Length < 2)
                 {
-                    Console.WriteLine("[Navigation] Invalid line '{0}': Expecting format 'Name=Link'", line);
+                    logMessage += string.Format("[Navigation] Invalid line '{0}': Expecting format 'Name=Link'", line);
 
                     continue;
                 }
@@ -420,7 +535,24 @@ namespace StaticWiki
             return outNavigation;
         }
 
-        public static string ProcessFile(string baseName, string sourceText, string themeText, string title, List<KeyValuePair<string, string>> navigationInfo,
+        /// <summary>
+        /// Processes a page file and returns its processed contents
+        /// </summary>
+        /// <param name="baseName">The page name</param>
+        /// <param name="sourceText">The source text</param>
+        /// <param name="themeText">The theme text</param>
+        /// <param name="title">The page's title with the wiki title prepended</param>
+        /// <param name="pageTitle">The page's title</param>
+        /// <param name="navigationInfo">The Navigation Information</param>
+        /// <param name="searchNames">The names of all searchable pages</param>
+        /// <param name="searchURLs">The URLs of all searchable pages</param>
+        /// <param name="categoriesInfo">The Category Information for this page</param>
+        /// <param name="sourceDirectory">Our source directory</param>
+        /// <param name="currentDirectory">Our currrent directory</param>
+        /// <param name="pageExtension">Our page extension</param>
+        /// <param name="isCategories">Whether we're a category page</param>
+        /// <returns>The processed page contents</returns>
+        public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
             bool isCategories)
         {
@@ -435,9 +567,10 @@ namespace StaticWiki
             var finalText = (string)themeText.Clone();
 
             HandleTitleTag(ref finalText, processedTitle);
+            HandlePageTitleTag(ref finalText, pageTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
-            HandleNavTags(ref finalText, navigationInfo, sourceDirectory, currentDirectory, pageExtension, searchNames);
-            HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories, sourceDirectory, currentDirectory, pageExtension, searchNames);
+            HandleNavTags(ref finalText, navigationInfo);
+            HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
             HandleBasenameTag(ref finalText, baseName);
             HandleContentTag(ref finalText, contentText);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
@@ -447,7 +580,14 @@ namespace StaticWiki
             return finalText;
         }
 
-        public static bool CopyThemeResourcesToFolder(string themeFileName, string destinationDirectory, ref string logMessage)
+        /// <summary>
+        /// Copies the resources from a theme folder to a destination directory
+        /// </summary>
+        /// <param name="themeFileName">The theme's file name</param>
+        /// <param name="destinationDirectory">Our destination directory</param>
+        /// <param name="logMessage">Our current log message</param>
+        /// <returns>Whether we successfully copied the files</returns>
+        private static bool CopyThemeResourcesToFolder(string themeFileName, string destinationDirectory, ref string logMessage)
         {
             var files = new string[0];
             var themeDirectory = Path.GetDirectoryName(themeFileName);
@@ -486,7 +626,11 @@ namespace StaticWiki
             return true;
         }
 
-        private static void DeleteDestinationContents(string destinationDirectory)
+        /// <summary>
+        /// Deletes a directory
+        /// </summary>
+        /// <param name="destinationDirectory">The directory to delete</param>
+        private static void DeleteDirectory(string destinationDirectory)
         {
             var files = Directory.GetFiles(destinationDirectory);
             var directories = Directory.GetDirectories(destinationDirectory);
@@ -498,12 +642,23 @@ namespace StaticWiki
 
             foreach (var directory in directories)
             {
-                DeleteDestinationContents(directory);
+                DeleteDirectory(directory);
             }
 
             Directory.Delete(destinationDirectory, false);
         }
 
+        /// <summary>
+        /// Processes a source directory into a destination directory
+        /// </summary>
+        /// <param name="sourceDirectory">The source directory</param>
+        /// <param name="destinationDirectory">The destination directory</param>
+        /// <param name="themeFileName">The file name of the theme file</param>
+        /// <param name="navigationFileName">The file name of the navigation file</param>
+        /// <param name="contentExtensions">The file extensions for all content files</param>
+        /// <param name="baseTitle">The wiki title</param>
+        /// <param name="logMessage">Our current log message</param>
+        /// <returns>Whether we successfully processed the source into the destination</returns>
         public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
@@ -511,12 +666,13 @@ namespace StaticWiki
             var files = new string[0];
             var categoriesDictionary = new Dictionary<string, List<string>>();
             var categoriesRegex = new Regex("\\[categories\\](.*?)\\[\\/categories\\]");
+            var titleRegex = new Regex("\\[title\\](.*?)\\[\\/title\\]");
 
             logMessage = "";
 
             try
             {
-                DeleteDestinationContents(destinationDirectory);
+                DeleteDirectory(destinationDirectory);
             }
             catch (Exception)
             {
@@ -537,9 +693,9 @@ namespace StaticWiki
 
             try
             {
-                StreamReader In = new StreamReader(themeFileName);
+                var inReader = new StreamReader(themeFileName);
 
-                themeText = In.ReadToEnd();
+                themeText = inReader.ReadToEnd();
             }
             catch (Exception e)
             {
@@ -569,7 +725,7 @@ namespace StaticWiki
             {
                 var content = File.ReadAllText(navigationFileName);
 
-                navigationInfo = ProcessNavigation(content);
+                navigationInfo = ProcessNavigationFileContent(content, ref logMessage);
             }
             catch (Exception)
             {
@@ -587,12 +743,13 @@ namespace StaticWiki
                 {
                     var inReader = new StreamReader(file);
                     var content = inReader.ReadToEnd();
+                    var title = "";
 
                     inReader.Close();
 
                     foreach (Match match in categoriesRegex.Matches(content))
                     {
-                        if (match.Index == 0 && match.Groups.Count == 2)
+                        if (match.Groups.Count == 2 && (match.Groups[0].Index == 0 || content[match.Groups[0].Index - 1] == '\n'))
                         {
                             var categoriesString = match.Groups[1].Value;
                             var categoryBits = categoriesString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
@@ -614,7 +771,24 @@ namespace StaticWiki
                         }
                     }
 
+                    foreach (Match match in titleRegex.Matches(content))
+                    {
+                        if (match.Groups.Count == 2)
+                        {
+                            title = match.Groups[1].Value;
+                            content = content.Replace(match.Groups[0].Value, "");
+                        }
+                    }
+
+                    var isCategoryPage = SaneFileName(baseName).StartsWith(SaneFileName(categoryPrefix));
+
+                    if(isCategoryPage && title.Length == 0)
+                    {
+                        title = baseName.Replace(SaneFileName(categoryPrefix), categoryPrefix);
+                    }
+
                     var fileInfo = new FileInfo();
+                    fileInfo.pageTitle = title.Length > 0 ? title : baseName;
                     fileInfo.baseName = baseName;
                     fileInfo.saneBaseName = SaneFileName(baseName);
                     fileInfo.text = content;
@@ -634,7 +808,7 @@ namespace StaticWiki
 
             foreach (var pair in fileCache)
             {
-                searchNames.Add(pair.Key);
+                searchNames.Add(pair.Value.pageTitle);
                 searchURLs.Add(SaneFileName(pair.Value.baseName));
             }
 
@@ -643,30 +817,19 @@ namespace StaticWiki
                 var formattedCategoryName = FormattedCategoryName(categoryName);
                 var saneCategoryName = SaneFileName(formattedCategoryName);
 
-                searchNames.Add(formattedCategoryName);
-                searchURLs.Add(saneCategoryName);
-
                 //Make sure category lists are created
-                if (!fileCache.Where(x => x.Value.baseName == formattedCategoryName).Any())
+                if (!fileCache.Where(x => x.Value.saneBaseName == SaneFileName(formattedCategoryName)).Any())
                 {
-                    if(!fileCache.Where(x => x.Value.saneBaseName == saneCategoryName).Any())
+                    fileCache.Add(formattedCategoryName, new FileInfo()
                     {
-                        fileCache.Add(formattedCategoryName, new FileInfo()
-                        {
-                            baseName = formattedCategoryName,
-                            saneBaseName = saneCategoryName,
-                            text = ""
-                        });
-                    }
-                    else
-                    {
-                        fileCache.Add(formattedCategoryName, new FileInfo()
-                        {
-                            baseName = formattedCategoryName,
-                            saneBaseName = saneCategoryName,
-                            text = ""
-                        });
-                    }
+                        pageTitle = formattedCategoryName,
+                        baseName = formattedCategoryName,
+                        saneBaseName = saneCategoryName,
+                        text = ""
+                    });
+
+                    searchNames.Add(formattedCategoryName);
+                    searchURLs.Add(saneCategoryName);
                 }
             }
 
@@ -718,8 +881,9 @@ namespace StaticWiki
                 categoryInfo.Sort((a, b) => a.Key.CompareTo(b.Key));
 
                 var fileInfo = fileCache[baseName];
-                var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, baseName), navigationInfo,
-                        searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName, pageExtension, isCategoryPage);
+                var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
+                    fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
+                    pageExtension, isCategoryPage);
 
                 try
                 {
@@ -789,6 +953,18 @@ namespace StaticWiki
             return true;
         }
 
+        /// <summary>
+        /// Gets details on a workspace from a workspace directory by parsing the "staticwiki.ini" file
+        /// </summary>
+        /// <param name="workspaceDirectory">The workspace's directory</param>
+        /// <param name="sourceDirectory">The parsed source directory</param>
+        /// <param name="destinationDirectory">The parsed destination directory</param>
+        /// <param name="themeFileName">The parsed theme file name</param>
+        /// <param name="titleName">The parsed wiki title name</param>
+        /// <param name="navigationFileName">The parsed navigation file name</param>
+        /// <param name="contentExtensions">The parsed content extensions</param>
+        /// <param name="logMessage">Our current log mesasge</param>
+        /// <returns>Whether we successfully parsed the staticwiki.ini file</returns>
         public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string themeFileName, ref string titleName, ref string navigationFileName,
             ref string[] contentExtensions, ref string logMessage)
         {

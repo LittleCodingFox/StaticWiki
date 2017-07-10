@@ -1,4 +1,5 @@
-# Introduction
+[categories]Sample[/categories]
+[title]Introduction[/title]
 
 Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wiki which can be read without additional software, and even while offline.
 
@@ -7,6 +8,11 @@ Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wi
 You're looking at it right now!
 
 # What's new
+
+## 1.0.0 pre4
+- Page title support and `{PAGETITLE}` support for themes
+- Minor bug fixes to category pages
+- 
 
 ## 1.0.0 pre3
 - Categories support
