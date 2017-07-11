@@ -73,7 +73,7 @@ Subdirectories can be used and will change the name of pages to `Title - Page Ti
 Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
 Additionally, you can create category pages in your sources (with their name in the form of `Category_name`) to add some content to your category page.
 
-Pages can have a custom title by adding using the `[title]` tag. For example, `[title]My title[/title}`.
+Pages can have a custom title by using the `[title]` tag. For example, `[title]My title[/title}`.
 
 Special sections in themes are:
 
