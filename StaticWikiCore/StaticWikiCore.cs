@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace StaticWiki
 {
@@ -560,7 +559,7 @@ namespace StaticWiki
             var recursiveBack = currentDirectory.Length > 0 ?
                 string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
             var searchNamesString = string.Join(",", searchNames.Select(x => string.Format("\"{0}\"", MarkdownStrippedString(x, pipeline).Replace("\n", ""))).ToArray());
-            var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}{1}\"", recursiveBack, x)).ToArray());
+            var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}{1}{2}\"", recursiveBack, x, pageExtension)).ToArray());
             var contentText = Markdown.ToHtml(sourceText, pipeline);
             var processedTitle = MarkdownStrippedString(title, pipeline);
 
