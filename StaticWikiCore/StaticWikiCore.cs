@@ -863,7 +863,19 @@ namespace StaticWiki
 
                         foreach(var item in items)
                         {
-                            categoryInfo.Add(new KeyValuePair<string, string>(item, SaneFileName(item)));
+                            var cacheInfo = fileCache.Where(x => x.Value.saneBaseName == SaneFileName(item)).Select(x => x.Value).FirstOrDefault();
+                            var itemTitle = cacheInfo != null ? cacheInfo.pageTitle : null;
+
+                            if(itemTitle != null && itemTitle != cacheInfo.saneBaseName && itemTitle != cacheInfo.baseName)
+                            {
+                                categoryInfo.Add(new KeyValuePair<string, string>(itemTitle, SaneFileName(item)));
+                            }
+                            else
+                            {
+                                var lastPiece = item.Replace("\\", "/").Split("/".ToCharArray()).Last().Replace("_", " ");
+
+                                categoryInfo.Add(new KeyValuePair<string, string>(lastPiece, SaneFileName(item)));
+                            }
                         }
                     }
                 }

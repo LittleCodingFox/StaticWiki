@@ -231,6 +231,14 @@
 			$('#searchResultsCover').css('visibility', 'inherit');
 			$('#searchResults').html(HTML);
 		}
+		
+		$(document).ready(function() 
+		{
+			$('a[href$="#"]')
+				.wrap("<strong></strong>")
+				.addClass("text-danger");
+				
+		});
 	</script>
   </body>
 </html>
