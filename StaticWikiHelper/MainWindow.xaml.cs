@@ -5,6 +5,7 @@ using StaticWiki;
 using System.ComponentModel;
 using Ookii.Dialogs.Wpf;
 using System.Linq;
+using System.Threading;
 
 namespace StaticWikiHelper
 {
@@ -24,6 +25,10 @@ namespace StaticWikiHelper
 
         private bool autoUpdatesEnabled = true;
 
+        private Thread workThread;
+        private bool shouldTerminateWorkThread = false;
+        private bool shouldUpdate = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -33,6 +38,36 @@ namespace StaticWikiHelper
             updateButton.Visibility = Visibility.Hidden;
 
             Log("Starting Static Wiki");
+
+            workThread = new Thread(new ParameterizedThreadStart((parameter) =>
+            {
+                for (;;)
+                {
+                    var shouldProcessWork = false;
+
+                    lock (this)
+                    {
+                        if (shouldTerminateWorkThread)
+                        {
+                            return;
+                        }
+
+                        shouldProcessWork = shouldUpdate && autoUpdatesEnabled;
+
+                        if(shouldProcessWork)
+                        {
+                            shouldUpdate = false;
+                        }
+                    }
+
+                    if(shouldProcessWork)
+                    {
+                        Process();
+                    }
+                }
+            }));
+
+            workThread.Start(null);
         }
 
         private string logFileName
@@ -88,6 +123,11 @@ namespace StaticWikiHelper
                 fileSystemWatcher = null;
             }
 
+            lock(this)
+            {
+                shouldTerminateWorkThread = true;
+            }
+
             Log("Closing Static Wiki");
 
             base.OnClosing(e);
@@ -141,7 +181,10 @@ namespace StaticWikiHelper
 
                 if(autoUpdatesEnabled)
                 {
-                    Process();
+                    lock(this)
+                    {
+                        shouldUpdate = true;
+                    }
                 }
             }
         }
@@ -165,7 +208,10 @@ namespace StaticWikiHelper
                 return;
             }
 
-            Process();
+            lock (this)
+            {
+                shouldUpdate = true;
+            }
         }
 
         private void OnRenamed(object source, RenamedEventArgs e)
@@ -175,7 +221,10 @@ namespace StaticWikiHelper
                 return;
             }
 
-            Process();
+            lock (this)
+            {
+                shouldUpdate = true;
+            }
         }
 
         private void HandleManualUpdate(object source, RoutedEventArgs e)
@@ -185,17 +234,26 @@ namespace StaticWikiHelper
                 return;
             }
 
-            Process();
+            lock (this)
+            {
+                shouldUpdate = true;
+            }
         }
 
         private void EnableAutoUpdates(object source, RoutedEventArgs e)
         {
-            autoUpdatesEnabled = true;
+            lock(this)
+            {
+                autoUpdatesEnabled = true;
+            }
         }
 
         private void DisableAutoUpdates(object source, RoutedEventArgs e)
         {
-            autoUpdatesEnabled = false;
+            lock (this)
+            {
+                autoUpdatesEnabled = false;
+            }
         }
     }
 }
