@@ -520,8 +520,6 @@ namespace StaticWiki
 
                 if (pieces.Length < 2)
                 {
-                    logMessage += string.Format("[Navigation] Invalid line '{0}': Expecting format 'Name=Link'", line);
-
                     continue;
                 }
 
@@ -590,6 +588,7 @@ namespace StaticWiki
         {
             var files = new string[0];
             var themeDirectory = Path.GetDirectoryName(themeFileName);
+            var lastFile = "";
 
             try
             {
@@ -605,6 +604,9 @@ namespace StaticWiki
                     var baseName = file.Substring(themeDirectory.Length + 1);
                     var outName = Path.Combine(destinationDirectory, baseName);
 
+                    logMessage += string.Format("... {0} (as '{1}')\n", file, outName);
+                    lastFile = file;
+
                     var directory = Path.GetDirectoryName(outName);
 
                     if (!Directory.Exists(directory))
@@ -615,9 +617,9 @@ namespace StaticWiki
                     File.Copy(file, outName, true);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                logMessage += string.Format("StaticWiki failed to copy some theme resources to '{0}'", destinationDirectory);
+                logMessage += string.Format("StaticWiki failed to copy theme resource '{0}' to '{1}'. Aborting theme resource copying.", lastFile, destinationDirectory);
 
                 return false;
             }
@@ -796,7 +798,7 @@ namespace StaticWiki
                 }
                 catch (Exception e)
                 {
-                    logMessage += string.Format("Failed to process file '{0}': {1}\n", file, e.Message);
+                    logMessage += string.Format(" ...   Failed to preprocess file '{0}': {1}\n", file, e.Message);
 
                     continue;
                 }
@@ -915,7 +917,7 @@ namespace StaticWiki
                 }
                 catch (Exception e)
                 {
-                    logMessage += string.Format("Failed to process file '{0}': {1}\n", file, e.Message);
+                    logMessage += string.Format("...   Failed to output file '{0}': {1}\n", file, e.Message);
                 }
             }
 
@@ -939,6 +941,8 @@ namespace StaticWiki
                 var from = Path.Combine(sourceDirectory, baseName);
                 var to = Path.Combine(destinationDirectory, baseName);
 
+                logMessage += string.Format("... {0} (as '{1}')\n", baseName, to);
+
                 try
                 {
                     if (directoryName.Length > 0)
@@ -953,9 +957,9 @@ namespace StaticWiki
 
                     File.Copy(from, to, true);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    logMessage += string.Format("Unable to copy content file '{0}' (as '{1}'\n", from, to);
+                    logMessage += string.Format("Unable to copy content file '{0}' (as '{1}'): {2}\n", from, to, e.Message);
                 }
             }
 
