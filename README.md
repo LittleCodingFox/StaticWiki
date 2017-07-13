@@ -1,4 +1,4 @@
-[Changelog](Changelog) &nbsp;&middot;&nbsp; [Documentation](Notes) &nbsp;&middot;&nbsp; [Instructions](Instructions)
+[Changelog](Changelog.md) &nbsp;&middot;&nbsp; [Documentation](Notes.md) &nbsp;&middot;&nbsp; [Instructions](Instructions.md)
 
 # Introduction
 
