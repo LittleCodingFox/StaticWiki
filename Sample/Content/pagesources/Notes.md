@@ -43,7 +43,7 @@ But not:
 <strong>[Google](http://www.google.com)</strong>
 ```
 
-For adding a custom image, you can do simple HTML like:
+For adding an image in a custom way, such as a custom size, you can do simple HTML like:
 
 ```
 <img src="my image.png" width="my width" height="my height">
