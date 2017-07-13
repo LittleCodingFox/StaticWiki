@@ -1,4 +1,5 @@
 [categories]Sample, Markdown[/categories]
+[title]Markdown Sample[/title]
 (Adapted from [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet))
 
 Here are some samples of Markdown syntax you can look into from the source files.
