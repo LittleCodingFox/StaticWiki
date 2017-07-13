@@ -26,6 +26,35 @@ If a non-URL link has no file extension and it is a page that already exists, it
 Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
 Additionally, you can create category pages in your sources (with their name in the form of `Category_name`) to add some content to your category page.
 
+# Custom HTML and images
+
+You can use custom HTML for displaying your content, although you can't combine it with Markdown as you might expect.
+Essentially, you can add HTML to your Markdown, separate from the Markdown itself. You cannot combine them at the same time.
+
+So, for instance, you can do:
+
+```
+<strong><a href="http://www.google.com">Google</a></strong>
+```
+
+But not:
+
+```
+<strong>[Google](http://www.google.com)</strong>
+```
+
+For adding a custom image, you can do simple HTML like:
+
+```
+<img src="my image.png" width="my width" height="my height">
+```
+
+Or:
+
+```
+<img src="my image.png" style="border:1; width:my width; height: my height">
+```
+
 # Theme sections
 
 Special sections in themes are:
