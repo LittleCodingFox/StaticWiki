@@ -1,3 +1,14 @@
+## 1.0.0 pre5
+
+- Added support for disabling page extensions
+- Added support for disabling link correction
+- Fixed an issue preventing StaticWiki from creating your wiki while in a read only directory such as directories in Google Drive
+- Adjusted documentation
+- Changed the Helper App so that it processes your wiki in a separate thread
+- Changed categories to have the page title or file name instead of a path to the page
+- Added theme support for marking broken links in a way that makes it obvious
+- Fixed search URLs not using the proper page extensions
+- Improved logging for better diagnosis of issues users may have
 
 ## 1.0.0 pre4
 - Page title support and `{PAGETITLE}` support for themes
