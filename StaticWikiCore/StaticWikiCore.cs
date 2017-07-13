@@ -49,6 +49,8 @@ namespace StaticWiki
         private const string configurationTitleName = "Title";
         private const string configurationThemeFileName = "ThemeFile";
         private const string configurationContentExtensionsName = "ContentExtensions";
+        private const string configurationDisableAutoPageExtensionsName = "DisableAutoPageExtensions";
+        private const string configurationDisableLinkCorrectionName = "DisableLinkCorrection";
         #endregion
 
         /// <summary>
@@ -456,8 +458,10 @@ namespace StaticWiki
         /// <param name="currentDirectory">Our current directory</param>
         /// <param name="pageExtension">Our page extension</param>
         /// <param name="searchURLs">Our search URLs</param>
+        /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
+        /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <returns>The processed links</returns>
-        private static string ProcessLinksInContent(string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchURLs)
+        private static string ProcessLinksInContent(string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchURLs, bool disableAutoPageExtension, bool disableLinkCorrection)
         {
             var linkHrefRegex = new Regex("<a href=\"(.*?)\">((?:.(?!\\<\\/a\\>))*.)<\\/a>");
 
@@ -477,14 +481,14 @@ namespace StaticWiki
 
                         if (searchURLs.Where(x => x.EndsWith(SaneFileName(url))).Any())
                         {
-                            url = recursiveBack + SaneFileName(searchURLs.Where(x => x.EndsWith(SaneFileName(url))).FirstOrDefault()) + pageExtension;
+                            url = string.Format("{0}{1}{2}", recursiveBack, SaneFileName(searchURLs.Where(x => x.EndsWith(SaneFileName(url))).FirstOrDefault()), disableAutoPageExtension ? "" : pageExtension);
                         }
                         else
                         {
                             invalid = true;
                         }
 
-                        if (invalid)
+                        if (invalid && !disableLinkCorrection)
                         {
                             content = content.Replace(linkMatch.Groups[0].Value, string.Format("<a href=\"#\">{0}</a>", linkMatch.Groups[2].Value));
                         }
@@ -548,10 +552,12 @@ namespace StaticWiki
         /// <param name="currentDirectory">Our currrent directory</param>
         /// <param name="pageExtension">Our page extension</param>
         /// <param name="isCategories">Whether we're a category page</param>
+        /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
+        /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <returns>The processed page contents</returns>
         public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
-            bool isCategories)
+            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection)
         {
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
             var recursiveBack = currentDirectory.Length > 0 ?
@@ -572,7 +578,7 @@ namespace StaticWiki
             HandleRootDirectoryTag(ref finalText, currentDirectory);
             HandleContentTag(ref finalText, contentText);
 
-            finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchURLs);
+            finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchURLs, disableAutoPageExtension, disableLinkCorrection);
 
             return finalText;
         }
@@ -662,9 +668,12 @@ namespace StaticWiki
         /// <param name="navigationFileName">The file name of the navigation file</param>
         /// <param name="contentExtensions">The file extensions for all content files</param>
         /// <param name="baseTitle">The wiki title</param>
+        /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
+        /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <param name="logMessage">Our current log message</param>
         /// <returns>Whether we successfully processed the source into the destination</returns>
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle, ref string logMessage)
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle,
+            bool disableAutoPageExtension, bool disableLinkCorrection, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
@@ -901,7 +910,7 @@ namespace StaticWiki
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
                     fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
-                    pageExtension, isCategoryPage);
+                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection);
 
                 try
                 {
@@ -983,10 +992,12 @@ namespace StaticWiki
         /// <param name="titleName">The parsed wiki title name</param>
         /// <param name="navigationFileName">The parsed navigation file name</param>
         /// <param name="contentExtensions">The parsed content extensions</param>
+        /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
+        /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <param name="logMessage">Our current log mesasge</param>
         /// <returns>Whether we successfully parsed the staticwiki.ini file</returns>
         public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string themeFileName, ref string titleName, ref string navigationFileName,
-            ref string[] contentExtensions, ref string logMessage)
+            ref string[] contentExtensions, ref bool disableAutoPageExtension, ref bool disableLinkCorrection, ref string logMessage)
         {
             try
             {
@@ -1008,6 +1019,28 @@ namespace StaticWiki
                 if (contentExtensionsString.Length > 0)
                 {
                     contentExtensions = contentExtensionsString.Split(",".ToCharArray()).Select(x => x.Trim()).ToArray();
+                }
+
+                var disableAutoPageExtensionString = iniParser.GetValue(configurationDisableAutoPageExtensionsName, configurationSectionName);
+
+                if(disableAutoPageExtensionString == "0")
+                {
+                    disableAutoPageExtension = false;
+                }
+                else if(disableAutoPageExtensionString == "1")
+                {
+                    disableAutoPageExtension = true;
+                }
+
+                var disableLinkCorrectionString = iniParser.GetValue(configurationDisableLinkCorrectionName, configurationSectionName);
+
+                if (disableLinkCorrectionString == "0")
+                {
+                    disableLinkCorrection = false;
+                }
+                else if (disableLinkCorrectionString == "1")
+                {
+                    disableLinkCorrection = true;
                 }
             }
             catch (Exception exception)

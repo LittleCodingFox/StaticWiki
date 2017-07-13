@@ -22,6 +22,8 @@ namespace StaticWikiHelper
         private string titleName = "";
         private string navigationFileName = "";
         private string[] contentExtensions = new string[0];
+        private bool disableAutoPageExtension = false;
+        private bool disableLinkCorrection = false;
 
         private bool autoUpdatesEnabled = true;
 
@@ -154,7 +156,8 @@ namespace StaticWikiHelper
 
                 string logMessage = "";
 
-                if(!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions, ref logMessage))
+                if(!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
+                    ref disableAutoPageExtension, ref disableLinkCorrection, ref logMessage))
                 {
                     MessageBox.Show("Unable to load project details", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
@@ -195,7 +198,7 @@ namespace StaticWikiHelper
         {
             var logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName, ref logMessage);
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName, disableAutoPageExtension, disableLinkCorrection, ref logMessage);
 
             if (logMessage.Length > 0)
             {
