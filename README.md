@@ -12,7 +12,7 @@ Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wi
 
 # Why should I use this?
 
-Static Wiki's sources for creating the HTML pages are regular Markdown text files. You can use them anywhere else and they will work the same way.
+Static Wiki's sources for creating the HTML pages are regular [Markdown](http://www.markdowntutorial.com/) text files. You can use them anywhere else and they will work the same way.
 
 You can also make backups more easily. Want to use `.zip` files? [Git](http://www.github.com) repositories? Post directly to the web?
 
