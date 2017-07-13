@@ -57,45 +57,9 @@ based on the theme file (`staticwikitheme/theme.html` by default).
 Finally, the `Navigation.list` file (located in the same directory as `staticwiki.ini`) can be used to customize the page navigation of your wiki.
 You can create links one line at a time in a form of `Name=URL` per line. An example would be something like `Google=http://www.google.com`.
 
-# Notes
+# Documentation
 
-Some Markdown extensions are enabled by default, such as [piped tables](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#tables). Right now there is no possibility to change which are enabled by default,
-but in a future release that will be doable.
-
-Processed pages will have the same file extension as the theme file.
-
-The `Title` option in `staticwiki.ini` is the base page title - The pages generated will have a title in the form of `Title - Current Page Title`.
-
-Current Page Title will have `_`'s replaced with spaces, so a page like `Page_Sample` will become `Page Sample`.
-
-Subdirectories can be used and will change the name of pages to `Title - Page Title (Subdirectory name)`.
-
-Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
-Additionally, you can create category pages in your sources (with their name in the form of `Category_name`) to add some content to your category page.
-
-Pages can have a custom title by using the `[title]` tag. For example, `[title]My title[/title}`.
-
-Special sections in themes are:
-
-- `{TITLE}` - should be placed on the &lt;title&gt; tag
-- `{CONTENT}` - should be placed where you want the page content to show
-- `{SEARCHNAMES}` - A list of javascript strings containing the page names
-- `{SEARCHADDRESSES}` - A list of javascript strings containing the page addresses
-- `{BEGINNAV}` - Begins a code snippet for navigation
-- `{ENDNAV}` - Ends a code snippet for navigation
-- `{NAVNAME}` - The name of the navigation item
-- `{NAVLINK}` - The link of the navigation item
-- `{ROOT}` - Root folder indicator for theme files
-- `{BEGINPAGECATEGORIES}` - Begins a code snippet for inserting a page's categories
-- `{ENDPAGECATEGORIES}` - Ends a code snippet for a page's categories
-- `{BEGINCATEGORYLIST}` - Begins the list of a category page's contents
-- `{ENDCATEGORYLIST}` - Ends the list of a category page's contents
-- `{CATEGORYNAME}`- The name of a category
-- `{CATEGORYLINK}` - The link to a category
-- `{BEGINIFCATEGORIES}` - Begins a code snippet if the page has categories
-- `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
-- `{BASENAME}` - The name of the current file
-- `{PAGETITLE}` - The title of the current file
+[Find it here](Notes)
 
 # License
 
