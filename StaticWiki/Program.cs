@@ -13,6 +13,8 @@ namespace StaticWiki
             string titleName = "";
             string navigationFileName = "";
             string[] contentExtensions = new string[0];
+            bool disableAutoPageExtension = false;
+            bool disableLinkCorrection = false;
 
             if (args.Length == 0)
             {
@@ -63,7 +65,8 @@ namespace StaticWiki
 
             if (workspaceDirectory.Length > 0)
             {
-                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions, ref logMessage))
+                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
+                    ref disableAutoPageExtension, ref disableLinkCorrection, ref logMessage))
                 {
                     Console.WriteLine(logMessage);
 
@@ -78,8 +81,11 @@ namespace StaticWiki
             Console.WriteLine(string.Format("Navigation File: \"{0}\"", navigationFileName));
             Console.WriteLine(string.Format("Content Extensions: \"{0}\"", string.Join(", ", contentExtensions.Select(x => string.Format(".{0}", x.Trim())).ToArray())));
             Console.WriteLine(string.Format("Base Page Title: \"{0}\"", titleName));
+            Console.WriteLine(string.Format("Auto Page Extensions are {0}", disableAutoPageExtension ? "DISABLED" : "ENABLED"));
+            Console.WriteLine(string.Format("Link Correction is {0}", disableLinkCorrection ? "DISABLED" : "ENABLED"));
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions.ToArray(), titleName, ref logMessage);
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions.ToArray(), titleName, disableAutoPageExtension,
+                disableLinkCorrection, ref logMessage);
 
             Console.WriteLine(logMessage);
         }
