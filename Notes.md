@@ -1,5 +1,3 @@
-[title]Notes and Documentation[/title]
-
 # Extensions
 
 Some Markdown extensions are enabled by default, such as [piped tables](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#tables). Right now there is no possibility to change which are enabled by default,
