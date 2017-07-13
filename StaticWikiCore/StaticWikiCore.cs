@@ -636,8 +636,12 @@ namespace StaticWiki
             var files = Directory.GetFiles(destinationDirectory);
             var directories = Directory.GetDirectories(destinationDirectory);
 
+            var directoryInfo = new DirectoryInfo(destinationDirectory);
+            directoryInfo.Attributes &= ~FileAttributes.ReadOnly;
+
             foreach (var file in files)
             {
+                File.SetAttributes(file, File.GetAttributes(file) & ~FileAttributes.ReadOnly);
                 File.Delete(file);
             }
 
@@ -675,8 +679,9 @@ namespace StaticWiki
             {
                 DeleteDirectory(destinationDirectory);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                logMessage += string.Format("StaticWiki failed to delete destination directory: '{0}'\n", e.Message);
             }
 
             try
@@ -1028,7 +1033,7 @@ namespace StaticWiki
             {
             }
 
-            if (!Directory.Exists(sourceDirectory) || !Directory.Exists(destinationDirectory) || !File.Exists(themeFileName))
+            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName))
             {
                 logMessage += string.Format("Unable to load project due to invalid required files or directories\n");
 

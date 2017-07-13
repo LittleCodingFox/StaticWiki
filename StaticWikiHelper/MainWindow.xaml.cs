@@ -64,6 +64,8 @@ namespace StaticWikiHelper
                     {
                         Process();
                     }
+
+                    Thread.Sleep(100);
                 }
             }));
 
