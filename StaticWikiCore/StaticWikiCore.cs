@@ -12,6 +12,7 @@ namespace StaticWiki
     {
         #region Filename Constants
         private const string navigationName = "Navigation.list";
+        private const string navigationNameMarkdown = "Navigation.md";
         private const string sourceFilesExtension = "md";
         #endregion
 
@@ -179,7 +180,9 @@ namespace StaticWiki
         /// </summary>
         /// <param name="finalText">Our current finalized text</param>
         /// <param name="navigationInfo">The navigation details using a list of Key Value Pairs where the Key is the Name and the Value is the URL</param>
-        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo)
+        /// <param name="navigationContent">The Markdown navigation content (if available) or an empty string</param>
+        /// <param name="pipeline">The markdown pipeline we're using (if we're using Markdown navigation)</param>
+        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo, string navigationContent, MarkdownPipeline pipeline)
         {
             var beginNavIndex = -1;
             var endNavIndex = -1;
@@ -209,14 +212,21 @@ namespace StaticWiki
                 var clonedText = finalText.Substring(beginNavIndex, endNavIndex - beginNavIndex);
                 var processedText = new StringBuilder(finalText.Substring(0, beginNavIndex));
 
-                for (var j = 0; j < navigationInfo.Count; j++)
+                if(navigationContent != null && navigationContent.Length > 0)
                 {
-                    var name = navigationInfo[j].Key;
-                    var link = navigationInfo[j].Value.Contains("://") ? navigationInfo[j].Value : SaneFileName(navigationInfo[j].Value);
+                    processedText.Append(Markdown.ToHtml(navigationContent, pipeline));
+                }
+                else
+                {
+                    for (var j = 0; j < navigationInfo.Count; j++)
+                    {
+                        var name = navigationInfo[j].Key;
+                        var link = navigationInfo[j].Value.Contains("://") ? navigationInfo[j].Value : SaneFileName(navigationInfo[j].Value);
 
-                    var navItemText = clonedText.Replace(navigationNameThemeTag, name).Replace(navigationLinkThemeTag, link);
+                        var navItemText = clonedText.Replace(navigationNameThemeTag, name).Replace(navigationLinkThemeTag, link);
 
-                    processedText.Append(navItemText);
+                        processedText.Append(navItemText);
+                    }
                 }
 
                 processedText.Append(finalText.Substring(endNavIndex));
@@ -554,10 +564,11 @@ namespace StaticWiki
         /// <param name="isCategories">Whether we're a category page</param>
         /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
         /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
+        /// <param name="navigationContent">Content for Markdown navigation (if available) or empty string</param>
         /// <returns>The processed page contents</returns>
         public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
-            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection)
+            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, string navigationContent)
         {
             var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
             var recursiveBack = currentDirectory.Length > 0 ?
@@ -572,7 +583,7 @@ namespace StaticWiki
             HandleTitleTag(ref finalText, processedTitle);
             HandlePageTitleTag(ref finalText, pageTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
-            HandleNavTags(ref finalText, navigationInfo);
+            HandleNavTags(ref finalText, navigationInfo, navigationContent, pipeline);
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
             HandleBasenameTag(ref finalText, baseName);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
@@ -735,12 +746,20 @@ namespace StaticWiki
             CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
+            var navigationContent = "";
 
             try
             {
                 var content = File.ReadAllText(navigationFileName);
 
-                navigationInfo = ProcessNavigationFileContent(content, ref logMessage);
+                if(navigationFileName.EndsWith(".md"))
+                {
+                    navigationContent = content;
+                }
+                else
+                {
+                    navigationInfo = ProcessNavigationFileContent(content, ref logMessage);
+                }
             }
             catch (Exception)
             {
@@ -910,7 +929,7 @@ namespace StaticWiki
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
                     fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
-                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection);
+                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection, navigationContent);
 
                 try
                 {
@@ -1053,7 +1072,12 @@ namespace StaticWiki
             sourceDirectory = Path.Combine(workspaceDirectory, sourceDirectory);
             destinationDirectory = Path.Combine(workspaceDirectory, destinationDirectory);
             themeFileName = Path.Combine(workspaceDirectory, themeFileName);
-            navigationFileName = Path.Combine(workspaceDirectory, navigationName);
+            navigationFileName = Path.Combine(workspaceDirectory, navigationNameMarkdown);
+
+            if(!File.Exists(navigationFileName))
+            {
+                navigationFileName = Path.Combine(workspaceDirectory, navigationName);
+            }
 
             try
             {
