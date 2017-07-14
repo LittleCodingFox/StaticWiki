@@ -7,3 +7,5 @@ based on the theme file (`staticwikitheme/theme.html` by default).
 
 Finally, the `Navigation.list` file (located in the same directory as `staticwiki.ini`) can be used to customize the page navigation of your wiki.
 You can create links one line at a time in a form of `Name=URL` per line. An example would be something like `Google=http://www.google.com`.
+
+See the [Documentation](Notes) for more details.
