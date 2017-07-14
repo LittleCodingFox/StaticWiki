@@ -53,6 +53,44 @@ Or:
 <img src="my image.png" style="border:1; width:my width; height: my height">
 ```
 
+# Markdown Extensions
+
+You can use several [Markdig](https://github.com/lunet-io/markdig) extensions by using the `Extensions` field in `staticwiki.ini`.
+Extensions are separated by a comma and can have spaces. So if you want to use the `Bootstrap` and `Pipe Tables` extensions, you'd add this:
+
+```
+MarkdownExtensions=Bootstrap, Pipe Tables
+```
+
+These are the available extensions:
+
+- `Bootstrap`
+- `Pipe Tables`
+- `Grid Tables`
+- `Grid Tables`
+- `Extra Emphasis`
+- `Special Attributes`
+- `Definition Lists`
+- `Footnotes`
+- `Auto Identifiers`
+- `Auto Links`
+- `Task Lists`
+- `Extra Bullet Lists`
+- `Media Support`
+- `Abbreviations`
+- `Citations`
+- `Custom Containers`
+- `Figures`
+- `Footers`
+- `Mathematics`
+- `Hardline Breaks`
+- `Emoji`
+- `Smarty Pants`
+- `Diagrams`
+- `YAML Frontmatter`
+
+You can find more details on this in the [Markdig](https://github.com/lunet-io/markdig) page.
+
 # Theme sections
 
 Special sections in themes are:

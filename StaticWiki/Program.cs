@@ -15,6 +15,7 @@ namespace StaticWiki
             string[] contentExtensions = new string[0];
             bool disableAutoPageExtension = false;
             bool disableLinkCorrection = false;
+            string[] markdownExtensions = new string[0];
 
             if (args.Length == 0)
             {
@@ -66,7 +67,7 @@ namespace StaticWiki
             if (workspaceDirectory.Length > 0)
             {
                 if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
-                    ref disableAutoPageExtension, ref disableLinkCorrection, ref logMessage))
+                    ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
                 {
                     Console.WriteLine(logMessage);
 
@@ -83,9 +84,10 @@ namespace StaticWiki
             Console.WriteLine(string.Format("Base Page Title: \"{0}\"", titleName));
             Console.WriteLine(string.Format("Auto Page Extensions are {0}", disableAutoPageExtension ? "DISABLED" : "ENABLED"));
             Console.WriteLine(string.Format("Link Correction is {0}", disableLinkCorrection ? "DISABLED" : "ENABLED"));
+            Console.WriteLine(string.Format("Markdown Extensions: \"{0}\"", string.Join(", ", markdownExtensions)));
 
             StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions.ToArray(), titleName, disableAutoPageExtension,
-                disableLinkCorrection, ref logMessage);
+                disableLinkCorrection, markdownExtensions, ref logMessage);
 
             Console.WriteLine(logMessage);
         }

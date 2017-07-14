@@ -52,6 +52,7 @@ namespace StaticWiki
         private const string configurationContentExtensionsName = "ContentExtensions";
         private const string configurationDisableAutoPageExtensionsName = "DisableAutoPageExtensions";
         private const string configurationDisableLinkCorrectionName = "DisableLinkCorrection";
+        private const string configurationMarkdownExtensionsName = "MarkdownExtensions";
         #endregion
 
         /// <summary>
@@ -565,25 +566,25 @@ namespace StaticWiki
         /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
         /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <param name="navigationContent">Content for Markdown navigation (if available) or empty string</param>
+        /// <param name="markdownPipeline">The markdown pipeline to use</param>
         /// <returns>The processed page contents</returns>
         public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
-            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, string navigationContent)
+            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, string navigationContent, MarkdownPipeline markdownPipeline)
         {
-            var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
             var recursiveBack = currentDirectory.Length > 0 ?
                 string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
-            var searchNamesString = string.Join(",", searchNames.Select(x => string.Format("\"{0}\"", MarkdownStrippedString(x, pipeline).Replace("\n", ""))).ToArray());
+            var searchNamesString = string.Join(",", searchNames.Select(x => string.Format("\"{0}\"", MarkdownStrippedString(x, markdownPipeline).Replace("\n", ""))).ToArray());
             var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}{1}{2}\"", recursiveBack, x, pageExtension)).ToArray());
-            var contentText = Markdown.ToHtml(sourceText, pipeline);
-            var processedTitle = MarkdownStrippedString(title, pipeline);
+            var contentText = Markdown.ToHtml(sourceText, markdownPipeline);
+            var processedTitle = MarkdownStrippedString(title, markdownPipeline);
 
             var finalText = (string)themeText.Clone();
 
             HandleTitleTag(ref finalText, processedTitle);
             HandlePageTitleTag(ref finalText, pageTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
-            HandleNavTags(ref finalText, navigationInfo, navigationContent, pipeline);
+            HandleNavTags(ref finalText, navigationInfo, navigationContent, markdownPipeline);
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
             HandleBasenameTag(ref finalText, baseName);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
@@ -682,12 +683,12 @@ namespace StaticWiki
         /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
         /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <param name="logMessage">Our current log message</param>
+        /// <param name="markdownExtensions">Extra markdown extensions to use</param>
         /// <returns>Whether we successfully processed the source into the destination</returns>
         public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle,
-            bool disableAutoPageExtension, bool disableLinkCorrection, ref string logMessage)
+            bool disableAutoPageExtension, bool disableLinkCorrection, string[] markdownExtensions, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
-            var pipeline = new MarkdownPipelineBuilder().UsePipeTables().UseBootstrap().Build();
             var files = new string[0];
             var categoriesDictionary = new Dictionary<string, List<string>>();
             var categoriesRegex = new Regex("\\[categories\\](.*?)\\[\\/categories\\]");
@@ -754,17 +755,157 @@ namespace StaticWiki
 
                 if(navigationFileName.EndsWith(".md"))
                 {
+                    logMessage += "Loading navigation from Markdown navigation\n";
+
                     navigationContent = content;
                 }
                 else
                 {
+                    logMessage += "Loading navigation from Navigation List\n";
+
                     navigationInfo = ProcessNavigationFileContent(content, ref logMessage);
                 }
             }
             catch (Exception)
             {
-                logMessage += string.Format("Failed to read navigation info from '{0}'", navigationFileName);
+                logMessage += string.Format("Failed to read navigation info from '{0}'\n", navigationFileName);
             }
+
+            var pipelineBuilder = new MarkdownPipelineBuilder();
+            var upperExtensions = markdownExtensions.Select(x => x.ToUpper()).ToList();
+            var usedExtensions = new List<string>();
+
+            foreach(var extension in upperExtensions)
+            {
+                if(extension == "Bootstrap".ToUpper())
+                {
+                    usedExtensions.Add("Bootstrap");
+                    pipelineBuilder = pipelineBuilder.UseBootstrap();
+                }
+                else if(extension == "Pipe Tables".ToUpper())
+                {
+                    usedExtensions.Add("Pipe Tables");
+                    pipelineBuilder = pipelineBuilder.UsePipeTables();
+                }
+                else if(extension == "Grid Tables".ToUpper())
+                {
+                    usedExtensions.Add("Grid Tables");
+                    pipelineBuilder = pipelineBuilder.UseGridTables();
+                }
+                else if (extension == "Grid Tables".ToUpper())
+                {
+                    usedExtensions.Add("Grid Tables");
+                    pipelineBuilder = pipelineBuilder.UseGridTables();
+                }
+                else if(extension == "Extra Emphasis".ToUpper())
+                {
+                    usedExtensions.Add("Extra Emphasis");
+                    pipelineBuilder = pipelineBuilder.UseEmphasisExtras();
+                }
+                else if(extension == "Special Attributes".ToUpper())
+                {
+                    usedExtensions.Add("Special Attributes");
+                    pipelineBuilder = pipelineBuilder.UseGenericAttributes();
+                }
+                else if (extension == "Definition Lists".ToUpper())
+                {
+                    usedExtensions.Add("Definition Lists");
+                    pipelineBuilder = pipelineBuilder.UseDefinitionLists();
+                }
+                else if (extension == "Footnotes".ToUpper())
+                {
+                    usedExtensions.Add("Footnotes");
+                    pipelineBuilder = pipelineBuilder.UseFootnotes();
+                }
+                else if (extension == "Auto Identifiers".ToUpper())
+                {
+                    usedExtensions.Add("Auto Identifiers");
+                    pipelineBuilder = pipelineBuilder.UseAutoIdentifiers();
+                }
+                else if (extension == "Auto Links".ToUpper())
+                {
+                    usedExtensions.Add("Auto Links");
+                    pipelineBuilder = pipelineBuilder.UseAutoLinks();
+                }
+                else if (extension == "Task Lists".ToUpper())
+                {
+                    usedExtensions.Add("Task Lists");
+                    pipelineBuilder = pipelineBuilder.UseTaskLists();
+                }
+                else if (extension == "Extra Bullet Lists".ToUpper())
+                {
+                    usedExtensions.Add("Extra Bullet Lists");
+                    pipelineBuilder = pipelineBuilder.UseListExtras();
+                }
+                else if (extension == "Media Support".ToUpper())
+                {
+                    usedExtensions.Add("Media Support");
+                    pipelineBuilder = pipelineBuilder.UseMediaLinks();
+                }
+                else if (extension == "Abbreviations".ToUpper())
+                {
+                    usedExtensions.Add("Abbreviations");
+                    pipelineBuilder = pipelineBuilder.UseAbbreviations();
+                }
+                else if (extension == "Citations".ToUpper())
+                {
+                    usedExtensions.Add("Citations");
+                    pipelineBuilder = pipelineBuilder.UseCitations();
+                }
+                else if (extension == "Custom Containers".ToUpper())
+                {
+                    usedExtensions.Add("Custom Containers");
+                    pipelineBuilder = pipelineBuilder.UseCustomContainers();
+                }
+                else if (extension == "Figures".ToUpper())
+                {
+                    usedExtensions.Add("Figures");
+                    pipelineBuilder = pipelineBuilder.UseFigures();
+                }
+                else if (extension == "Footers".ToUpper())
+                {
+                    usedExtensions.Add("Footers");
+                    pipelineBuilder = pipelineBuilder.UseFooters();
+                }
+                else if (extension == "Mathematics".ToUpper())
+                {
+                    usedExtensions.Add("Mathematics");
+                    pipelineBuilder = pipelineBuilder.UseMathematics();
+                }
+                else if (extension == "Hardline Breaks".ToUpper())
+                {
+                    usedExtensions.Add("Hardline Breaks");
+                    pipelineBuilder = pipelineBuilder.UseSoftlineBreakAsHardlineBreak();
+                }
+                else if (extension == "Emoji".ToUpper())
+                {
+                    usedExtensions.Add("Emoji");
+                    pipelineBuilder = pipelineBuilder.UseEmojiAndSmiley();
+                }
+                else if (extension == "Smarty Pants".ToUpper())
+                {
+                    usedExtensions.Add("Smarty Pants");
+                    pipelineBuilder = pipelineBuilder.UseSmartyPants();
+                }
+                else if (extension == "Diagrams".ToUpper())
+                {
+                    usedExtensions.Add("Diagrams");
+                    pipelineBuilder = pipelineBuilder.UseDiagrams();
+                }
+                else if (extension == "YAML Frontmatter".ToUpper())
+                {
+                    usedExtensions.Add("YAML Frontmatter");
+                    pipelineBuilder = pipelineBuilder.UseYamlFrontMatter();
+                }
+                else
+                {
+                    logMessage += string.Format("Unable to use unknown extension '{0}'\n", markdownExtensions[upperExtensions.IndexOf(extension)]);
+                }
+            }
+
+            logMessage += string.Format("Using markdown extensions: {0}\n", string.Join(", ", usedExtensions.ToArray()));
+
+            var pipeline = pipelineBuilder.Build();
 
             logMessage += string.Format("Processing {0} files\n", files.Length);
 
@@ -929,7 +1070,7 @@ namespace StaticWiki
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
                     fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
-                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection, navigationContent);
+                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection, navigationContent, pipeline);
 
                 try
                 {
@@ -1013,10 +1154,11 @@ namespace StaticWiki
         /// <param name="contentExtensions">The parsed content extensions</param>
         /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
         /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
+        /// <param name="markdownExtensions">Markdown extensions used by the workspace</param>
         /// <param name="logMessage">Our current log mesasge</param>
         /// <returns>Whether we successfully parsed the staticwiki.ini file</returns>
         public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string themeFileName, ref string titleName, ref string navigationFileName,
-            ref string[] contentExtensions, ref bool disableAutoPageExtension, ref bool disableLinkCorrection, ref string logMessage)
+            ref string[] contentExtensions, ref bool disableAutoPageExtension, ref bool disableLinkCorrection, ref string[] markdownExtensions, ref string logMessage)
         {
             try
             {
@@ -1061,6 +1203,12 @@ namespace StaticWiki
                 {
                     disableLinkCorrection = true;
                 }
+
+                markdownExtensions = iniParser.GetValue(configurationMarkdownExtensionsName, configurationSectionName)
+                    .Split(",".ToCharArray())
+                    .Select(x => x.Trim())
+                    .Where(x => x.Length > 0)
+                    .ToArray();
             }
             catch (Exception exception)
             {
