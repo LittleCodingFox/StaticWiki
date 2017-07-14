@@ -1,8 +1,3 @@
-# Extensions
-
-Some Markdown extensions are enabled by default, such as [piped tables](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#tables). Right now there is no possibility to change which are enabled by default,
-but in a future release that will be doable.
-
 # Page Titles
 
 The `Title` option in `staticwiki.ini` is the base page title - The pages generated will have a title in the form of `Title - Current Page Title`.
@@ -19,10 +14,31 @@ You can link to other pages by specifying their path as if you were in the root 
 So if I have my wiki at a specific spot, and I want to link to `Sample/Markdown_Sample.md`, I just need to do something like `[my link](Sample/Markdown_Sample)`.
 If a non-URL link has no file extension and it is a page that already exists, it'll automatically get the proper file extension.
 
+Page links will automatically receive subdirectory correction. For instance, `Sample/Markdown_Sample` will become `../Sample/Markdown_Sample` if we're in the `Markdown_Sample` page in the `Sample` directory.
+Also, theme files use the `{ROOT}` tag for the same purpose.
+
+This ensures that the wiki is navigationable regardless of the location of the current page, without duplicating any files.
+
+However, pages must be linked the same way across all directories. So if you're in `Markdown_Sample.md` file located in the `Sample` directory and you want to link to another page in the `Sample` directory,
+you still have to link to `Sample/Page_Name`.
+
 # Categories
 
 Categories can be added to a page by adding the `[categories]` tag at the start of the page. For example, `[categories]Sample, Markdown[/categories]`.
 Additionally, you can create category pages in your sources (with their name in the form of `Category_name`) to add some content to your category page.
+
+Category pages are always created in the root directory of your wiki (the destination folder where your wiki is generated).
+So if you want to add custom content to a category page, you must create that file in the root directory.
+
+# Navigation
+
+Regular navigation can be done using a `Navigation.list` file at the workspace directory (the same directory that has your `staticwiki.ini` file), where each line corresponds to a name and a link, separated by a `=`. For example:
+
+```
+Google=http://www.google.com
+```
+
+However, if you need more advanced navigation, you can create a `Navigation.md` file in the same place as `Navigation.list`, and StaticWiki will favor the Markdown file over the list file.
 
 # Custom HTML and images
 
