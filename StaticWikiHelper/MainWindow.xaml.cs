@@ -144,8 +144,20 @@ namespace StaticWikiHelper
             dialog.Description = "Open Project Folder";
             dialog.ShowNewFolderButton = false;
             dialog.UseDescriptionForTitle = true;
+			
+            if (fileSystemWatcher != null)
+			{
+				fileSystemWatcher.EnableRaisingEvents = false;
+				fileSystemWatcher.Dispose();
+				fileSystemWatcher = null;
+			}
 
-            if(dialog.ShowDialog(this) == true)
+            lock(this)
+            {
+                shouldUpdate = false;
+            }
+
+			if(dialog.ShowDialog(this) == true)
             {
                 var basePath = dialog.SelectedPath;
 

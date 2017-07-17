@@ -110,6 +110,12 @@ namespace StaticWiki
         private static string SaneFileName(string fileName)
         {
             string invalidCharacters = Regex.Escape(new string(Path.GetInvalidFileNameChars().Where(x => x != '/' && x != '\\').ToArray()));
+
+            //MacOS allows ":", but this messes things up with categories. Force it to be turned into a "_" for consistency sakes
+            if(!invalidCharacters.Contains(":")) {
+                invalidCharacters += ":";
+            }
+
             string invalidRegexString = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidCharacters);
 
             return Regex.Replace(fileName, invalidRegexString, "_");
