@@ -89,7 +89,14 @@ namespace StaticWiki
         /// <returns>The stripped string</returns>
         private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
         {
-            return Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
+            var outString = Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
+
+            if(outString.Last() == '\n') //Remove the added newline if required
+            {
+                outString = outString.TrimEnd('\r', '\n');
+            }
+
+            return outString;
         }
 
         /// <summary>
@@ -641,7 +648,7 @@ namespace StaticWiki
                     File.Copy(file, outName, true);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 logMessage += string.Format("StaticWiki failed to copy theme resource '{0}' to '{1}'. Aborting theme resource copying.", lastFile, destinationDirectory);
 
@@ -968,11 +975,13 @@ namespace StaticWiki
                         title = baseName.Replace(SaneFileName(categoryPrefix), categoryPrefix);
                     }
 
-                    var fileInfo = new FileInfo();
-                    fileInfo.pageTitle = title.Length > 0 ? title : baseName;
-                    fileInfo.baseName = baseName;
-                    fileInfo.saneBaseName = SaneFileName(baseName);
-                    fileInfo.text = content;
+                    var fileInfo = new FileInfo()
+                    {
+                        pageTitle = title.Length > 0 ? title : baseName,
+                        baseName = baseName,
+                        saneBaseName = SaneFileName(baseName),
+                        text = content
+                    };
 
                     fileCache.Add(baseName, fileInfo);
                 }
@@ -1037,15 +1046,22 @@ namespace StaticWiki
                 if(isCategoryPage)
                 {
                     var unformattedCategoryName = saneBaseName.Replace(SaneFileName(categoryPrefix), "");
+                    var targetKey = unformattedCategoryName;
 
-                    if (categoriesDictionary.ContainsKey(unformattedCategoryName))
+                    //Might have a regular category string, so try to use that if the categories dictionary doesn't have that.
+                    if(!categoriesDictionary.ContainsKey(targetKey))
                     {
-                        var items = categoriesDictionary[unformattedCategoryName];
+                        targetKey = MarkdownStrippedString(unformattedCategoryName, pipeline);
+                    }
+
+                    if (targetKey != null && categoriesDictionary.ContainsKey(targetKey))
+                    {
+                        var items = categoriesDictionary[targetKey];
 
                         foreach(var item in items)
                         {
                             var cacheInfo = fileCache.Where(x => x.Value.saneBaseName == SaneFileName(item)).Select(x => x.Value).FirstOrDefault();
-                            var itemTitle = cacheInfo != null ? cacheInfo.pageTitle : null;
+                            var itemTitle = cacheInfo?.pageTitle;
 
                             if(itemTitle != null && itemTitle != cacheInfo.saneBaseName && itemTitle != cacheInfo.baseName)
                             {
