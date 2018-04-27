@@ -805,11 +805,6 @@ namespace StaticWiki
                     usedExtensions.Add("Grid Tables");
                     pipelineBuilder = pipelineBuilder.UseGridTables();
                 }
-                else if (extension == "Grid Tables".ToUpper())
-                {
-                    usedExtensions.Add("Grid Tables");
-                    pipelineBuilder = pipelineBuilder.UseGridTables();
-                }
                 else if(extension == "Extra Emphasis".ToUpper())
                 {
                     usedExtensions.Add("Extra Emphasis");
