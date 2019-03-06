@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace StaticWiki
@@ -10,6 +11,7 @@ namespace StaticWiki
             string sourceDirectory = "";
             string destinationDirectory = "";
             string themeFileName = "";
+            KeyValuePair<string, string>[] themes = new KeyValuePair<string, string>[0];
             string titleName = "";
             string navigationFileName = "";
             string[] contentExtensions = new string[0];
@@ -66,7 +68,8 @@ namespace StaticWiki
 
             if (workspaceDirectory.Length > 0)
             {
-                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
+                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName,
+                    ref themes, ref titleName, ref navigationFileName, ref contentExtensions,
                     ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
                 {
                     Console.WriteLine(logMessage);

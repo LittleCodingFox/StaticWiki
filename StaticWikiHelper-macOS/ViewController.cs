@@ -13,7 +13,8 @@ namespace StaticWikiHelpermacOS
 
 		private string sourceDirectory = "";
 		private string destinationDirectory = "";
-		private string themeFileName = "";
+		private string defaultThemeName = "";
+		private List<KeyValuePair<string, string>>[] themes = new List<KeyValuePair<string, string>>[0];
 		private string titleName = "";
 		private string navigationFileName = "";
 		private string[] contentExtensions = new string[0];
@@ -141,7 +142,7 @@ namespace StaticWikiHelpermacOS
 		{
 			var logMessage = "";
 
-			StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName,
+			StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, defaultThemeName, themes, navigationFileName, contentExtensions, titleName,
 				disableAutoPageExtension, disableLinkCorrection, markdownExtensions, ref logMessage);
 
 			if (logMessage.Length > 0)
@@ -152,7 +153,7 @@ namespace StaticWikiHelpermacOS
 
 		private void OnChanged(object source, FileSystemEventArgs e)
 		{
-			if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+			if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)) || !autoUpdatesEnabled)
 			{
 				return;
 			}
@@ -165,7 +166,7 @@ namespace StaticWikiHelpermacOS
 
 		private void OnRenamed(object source, RenamedEventArgs e)
 		{
-			if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+			if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)) || !autoUpdatesEnabled)
 			{
 				return;
 			}
@@ -220,7 +221,7 @@ namespace StaticWikiHelpermacOS
 
 				string logMessage = "";
 
-				if (!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
+				if (!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref defaultThemeName, ref themes, ref titleName, ref navigationFileName, ref contentExtensions,
 					ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
 				{
                     var alert = new NSAlert()

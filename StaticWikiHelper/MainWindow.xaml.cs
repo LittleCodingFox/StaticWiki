@@ -6,6 +6,7 @@ using System.ComponentModel;
 using Ookii.Dialogs.Wpf;
 using System.Linq;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace StaticWikiHelper
 {
@@ -18,9 +19,10 @@ namespace StaticWikiHelper
 
         private string sourceDirectory = "";
         private string destinationDirectory = "";
-        private string themeFileName = "";
+        private string defaultThemeName = "";
         private string titleName = "";
         private string navigationFileName = "";
+        private KeyValuePair<string, string>[] themes = new KeyValuePair<string, string>[0];
         private string[] contentExtensions = new string[0];
         private bool disableAutoPageExtension = false;
         private bool disableLinkCorrection = false;
@@ -169,7 +171,7 @@ namespace StaticWikiHelper
 
                 string logMessage = "";
 
-                if(!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref themeFileName, ref titleName, ref navigationFileName, ref contentExtensions,
+                if(!StaticWikiCore.GetWorkspaceDetails(basePath, ref sourceDirectory, ref destinationDirectory, ref defaultThemeName, ref themes, ref titleName, ref navigationFileName, ref contentExtensions,
                     ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
                 {
                     MessageBox.Show("Unable to load project details", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -211,7 +213,7 @@ namespace StaticWikiHelper
         {
             var logMessage = "";
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions, titleName,
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, defaultThemeName, themes, navigationFileName, contentExtensions, titleName,
                 disableAutoPageExtension, disableLinkCorrection, markdownExtensions, ref logMessage);
 
             if (logMessage.Length > 0)
@@ -222,7 +224,7 @@ namespace StaticWikiHelper
 
         private void OnChanged(object source, FileSystemEventArgs e)
         {
-            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+            if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)) || !autoUpdatesEnabled)
             {
                 return;
             }
@@ -235,7 +237,7 @@ namespace StaticWikiHelper
 
         private void OnRenamed(object source, RenamedEventArgs e)
         {
-            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName) || !autoUpdatesEnabled)
+            if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)) || !autoUpdatesEnabled)
             {
                 return;
             }
@@ -248,7 +250,7 @@ namespace StaticWikiHelper
 
         private void HandleManualUpdate(object source, RoutedEventArgs e)
         {
-            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName))
+            if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)))
             {
                 return;
             }

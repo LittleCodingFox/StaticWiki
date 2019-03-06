@@ -48,7 +48,8 @@ namespace StaticWiki
         private const string configurationSourceDirectoryName = "SourceDir";
         private const string configurationOutputDirectoryName = "OutputDir";
         private const string configurationTitleName = "Title";
-        private const string configurationThemeFileName = "ThemeFile";
+        private const string configurationDefaultThemeName = "DefaultThemeName";
+        private const string configurationThemes = "Themes";
         private const string configurationContentExtensionsName = "ContentExtensions";
         private const string configurationDisableAutoPageExtensionsName = "DisableAutoPageExtensions";
         private const string configurationDisableLinkCorrectionName = "DisableLinkCorrection";
@@ -79,6 +80,11 @@ namespace StaticWiki
             /// The text of this page
             /// </summary>
             public string text;
+
+            /// <summary>
+            /// The theme for this page
+            /// </summary>
+            public string theme;
         }
 
         /// <summary>
@@ -689,7 +695,8 @@ namespace StaticWiki
         /// </summary>
         /// <param name="sourceDirectory">The source directory</param>
         /// <param name="destinationDirectory">The destination directory</param>
-        /// <param name="themeFileName">The file name of the theme file</param>
+        /// <param name="defaultTheme">The default theme to use</param>
+        /// <param name="themes">A list in the form of name->filename of all themes</param>
         /// <param name="navigationFileName">The file name of the navigation file</param>
         /// <param name="contentExtensions">The file extensions for all content files</param>
         /// <param name="baseTitle">The wiki title</param>
@@ -698,7 +705,8 @@ namespace StaticWiki
         /// <param name="logMessage">Our current log message</param>
         /// <param name="markdownExtensions">Extra markdown extensions to use</param>
         /// <returns>Whether we successfully processed the source into the destination</returns>
-        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string themeFileName, string navigationFileName, string[] contentExtensions, string baseTitle,
+        public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string defaultTheme,
+            KeyValuePair<string, string>[] themes, string navigationFileName, string[] contentExtensions, string baseTitle,
             bool disableAutoPageExtension, bool disableLinkCorrection, string[] markdownExtensions, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
@@ -706,6 +714,8 @@ namespace StaticWiki
             var categoriesDictionary = new Dictionary<string, List<string>>();
             var categoriesRegex = new Regex("\\[categories\\](.*?)\\[\\/categories\\]");
             var titleRegex = new Regex("\\[title\\](.*?)\\[\\/title\\]");
+            var themeRegex = new Regex("\\[theme\\](.*?)\\[\\/theme\\]");
+            var themesDictionary = new Dictionary<string, string>();
 
             logMessage = "";
 
@@ -729,22 +739,31 @@ namespace StaticWiki
                 return false;
             }
 
-            var themeText = "";
-
-            try
+            foreach(var pair in themes)
             {
-                var inReader = new StreamReader(themeFileName);
+                try
+                {
+                    if (!themesDictionary.ContainsKey(pair.Key.ToLowerInvariant()))
+                    {
+                        var inReader = new StreamReader(pair.Value);
 
-                themeText = inReader.ReadToEnd();
+                        var text = inReader.ReadToEnd();
+
+                        themesDictionary.Add(pair.Key.ToLowerInvariant(), text);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logMessage += string.Format("Failed to read theme file \"{0}\": {1}\n", pair.Key, e.Message);
+
+                    return false;
+                }
             }
-            catch (Exception e)
+
+            if(!themesDictionary.ContainsKey(defaultTheme.ToLowerInvariant()))
             {
-                logMessage += string.Format("Failed to read theme file \"{0}\": {1}\n", themeFileName, e.Message);
-
-                return false;
+                logMessage += string.Format("Default theme \"{0}\" not found among loaded themes", defaultTheme);
             }
-
-            var pageExtension = Path.GetExtension(themeFileName);
 
             try
             {
@@ -757,7 +776,10 @@ namespace StaticWiki
             {
             }
 
-            CopyThemeResourcesToFolder(themeFileName, destinationDirectory, ref logMessage);
+            foreach(var pair in themes)
+            {
+                CopyThemeResourcesToFolder(pair.Value, destinationDirectory, ref logMessage);
+            }
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
             var navigationContent = "";
@@ -927,8 +949,18 @@ namespace StaticWiki
                     var inReader = new StreamReader(file);
                     var content = inReader.ReadToEnd();
                     var title = "";
+                    var themeName = defaultTheme;
 
                     inReader.Close();
+
+                    foreach(Match match in themeRegex.Matches(content))
+                    {
+                        if (match.Groups.Count == 2 && (match.Groups[0].Index == 0 || content[match.Groups[0].Index - 1] == '\n'))
+                        {
+                            themeName = match.Groups[1].Value;
+                            content = content.Replace(match.Groups[0].Value, "");
+                        }
+                    }
 
                     foreach (Match match in categoriesRegex.Matches(content))
                     {
@@ -975,7 +1007,8 @@ namespace StaticWiki
                         pageTitle = title.Length > 0 ? title : baseName,
                         baseName = baseName,
                         saneBaseName = SaneFileName(baseName),
-                        text = content
+                        text = content,
+                        theme = themeName.ToLowerInvariant(),
                     };
 
                     fileCache.Add(baseName, fileInfo);
@@ -1010,7 +1043,8 @@ namespace StaticWiki
                         pageTitle = formattedCategoryName,
                         baseName = formattedCategoryName,
                         saneBaseName = saneCategoryName,
-                        text = ""
+                        text = "",
+                        theme = defaultTheme.ToLowerInvariant(),
                     });
 
                     searchNames.Add(formattedCategoryName);
@@ -1024,6 +1058,15 @@ namespace StaticWiki
                 var fileName = Path.GetFileName(baseName);
                 var directoryName = Path.GetDirectoryName(baseName);
                 var saneBaseName = SaneFileName(baseName);
+                var themeName = fileCache[file].theme ?? defaultTheme;
+
+                if(!themesDictionary.ContainsKey(themeName))
+                {
+                    continue;
+                }
+
+                var themeText = themesDictionary[themeName];
+                var pageExtension = Path.GetExtension(themes.FirstOrDefault(x => x.Key.ToLowerInvariant() == themeName).Value);
                 var outName = Path.Combine(destinationDirectory, SaneFileName(baseName) + pageExtension);
 
                 logMessage += string.Format("... {0} (as {1})\n", file, outName);
@@ -1165,7 +1208,8 @@ namespace StaticWiki
         /// <param name="workspaceDirectory">The workspace's directory</param>
         /// <param name="sourceDirectory">The parsed source directory</param>
         /// <param name="destinationDirectory">The parsed destination directory</param>
-        /// <param name="themeFileName">The parsed theme file name</param>
+        /// <param name="defaultThemeName">The parsed default theme name</param>
+        /// <param name="themes">The parsed list of all themes in a format of name to filename</param>
         /// <param name="titleName">The parsed wiki title name</param>
         /// <param name="navigationFileName">The parsed navigation file name</param>
         /// <param name="contentExtensions">The parsed content extensions</param>
@@ -1174,8 +1218,9 @@ namespace StaticWiki
         /// <param name="markdownExtensions">Markdown extensions used by the workspace</param>
         /// <param name="logMessage">Our current log mesasge</param>
         /// <returns>Whether we successfully parsed the staticwiki.ini file</returns>
-        public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string themeFileName, ref string titleName, ref string navigationFileName,
-            ref string[] contentExtensions, ref bool disableAutoPageExtension, ref bool disableLinkCorrection, ref string[] markdownExtensions, ref string logMessage)
+        public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string defaultThemeName, ref KeyValuePair<string, string>[] themes,
+            ref string titleName, ref string navigationFileName, ref string[] contentExtensions, ref bool disableAutoPageExtension,
+            ref bool disableLinkCorrection, ref string[] markdownExtensions, ref string logMessage)
         {
             try
             {
@@ -1190,7 +1235,20 @@ namespace StaticWiki
                 sourceDirectory = iniParser.GetValue(configurationSourceDirectoryName, configurationSectionName);
                 destinationDirectory = iniParser.GetValue(configurationOutputDirectoryName, configurationSectionName);
                 titleName = iniParser.GetValue(configurationTitleName, configurationSectionName);
-                themeFileName = iniParser.GetValue(configurationThemeFileName, configurationSectionName);
+                defaultThemeName = iniParser.GetValue(configurationDefaultThemeName, configurationSectionName);
+                themes = iniParser.GetValue(configurationThemes, configurationSectionName).Split(",".ToCharArray()).Select(x => {
+                        var pairs = x.Trim().Split(":".ToCharArray());
+
+                        if(pairs.Length != 2)
+                        {
+                            return null;
+                        }
+
+                        return pairs;
+                    })
+                    .Where(x => x != null)
+                    .Select(x => new KeyValuePair<string, string>(x[0], Path.Combine(workspaceDirectory, x[1])))
+                    .ToArray();
 
                 var contentExtensionsString = iniParser.GetValue(configurationContentExtensionsName, configurationSectionName);
 
@@ -1236,7 +1294,6 @@ namespace StaticWiki
 
             sourceDirectory = Path.Combine(workspaceDirectory, sourceDirectory);
             destinationDirectory = Path.Combine(workspaceDirectory, destinationDirectory);
-            themeFileName = Path.Combine(workspaceDirectory, themeFileName);
             navigationFileName = Path.Combine(workspaceDirectory, navigationNameMarkdown);
 
             if(!File.Exists(navigationFileName))
@@ -1255,7 +1312,7 @@ namespace StaticWiki
             {
             }
 
-            if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName))
+            if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)))
             {
                 logMessage += string.Format("Unable to load project due to invalid required files or directories\n");
 
