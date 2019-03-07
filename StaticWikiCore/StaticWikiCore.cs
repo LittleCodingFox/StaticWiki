@@ -550,7 +550,6 @@ namespace StaticWiki
 
                     var templateText = themeTemplates[templateName];
                     var templateTags = new Dictionary<string, string>();
-                    var templateItemTags = new Dictionary<string, string>();
                     var templateItemIndex = 0;
                     templateIndex++;
 
@@ -601,6 +600,7 @@ namespace StaticWiki
                             {
                                 if (templateItemMatch.Groups.Count == 2)
                                 {
+                                    var templateItemTags = new Dictionary<string, string>();
                                     var templateItemContent = templateItemMatch.Groups[1].Value;
 
                                     foreach (Match templateItemTagMatch in templateItemTagRegex.Matches(templateItemContent))
