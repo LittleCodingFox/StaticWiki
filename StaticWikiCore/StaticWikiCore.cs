@@ -38,6 +38,7 @@ namespace StaticWiki
         private const string pageTitleThemeTag = "{PAGETITLE}";
         private const string templateIndexTag = "{TEMPLATEINDEX}";
         private const string templateItemIndexTag = "{TEMPLATEITEMINDEX}";
+        private const string templateItemContentTag = "{TEMPLATEITEMCONTENT}";
         #endregion
 
         #region Misc Constants
@@ -655,24 +656,19 @@ namespace StaticWiki
                                     }
 
                                     itemText = itemText.Replace(templateItemIndexTag, templateItemIndex.ToString());
-                                    itemText = itemText.Replace(templateIndexTag, templateIndex.ToString());
+                                    itemText = itemText.Replace(templateItemContentTag, templateItemContent);
 
                                     templateItemIndex++;
 
                                     itemProcessedText += itemText;
-
-                                    index = templateContent.IndexOf(templateItemMatch.Groups[0].Value);
-
-                                    if (index != -1)
-                                    {
-                                        templateContent = templateContent.Substring(0, index) + itemProcessedText + templateContent.Substring(index + templateItemMatch.Groups[0].Value.Length);
-                                    }
                                 }
                             }
 
                             templateProcessedText = templateProcessedText.Replace(themeTemplateItemMatch.Groups[0].Value, itemProcessedText);
                         }
                     }
+
+                    templateProcessedText = templateProcessedText.Replace(templateIndexTag, templateIndex.ToString());
 
                     index = contentText.IndexOf(m.Groups[0].Value);
 
