@@ -36,13 +36,8 @@ namespace StaticWiki
         private const string endIfCategoriesThemeTag = "{ENDIFCATEGORIES}";
         private const string baseNameThemeTag = "{BASENAME}";
         private const string pageTitleThemeTag = "{PAGETITLE}";
-        private const string beginSectionTag = "{BEGINSECTION}";
-        private const string endSectionTag = "{ENDSECTION}";
-        private const string beginSectionItemTag = "{BEGINSECTIONITEM}";
-        private const string endSectionItemTag = "{ENDSECTIONITEM}";
-        private const string sectionItemContentTag = "{SECTIONITEMCONTENT}";
-        private const string sectionItemIndexTag = "{SECTIONITEMINDEX}";
-        private const string sectionIndexTag = "{SECTIONINDEX}";
+        private const string templateIndexTag = "{TEMPLATEINDEX}";
+        private const string templateItemIndexTag = "{TEMPLATEITEMINDEX}";
         #endregion
 
         #region Misc Constants
@@ -92,28 +87,6 @@ namespace StaticWiki
             /// The theme for this page
             /// </summary>
             public string theme;
-        }
-
-        /// <summary>
-        /// Contains information on a section on a page
-        /// </summary>
-        private class SectionInfo
-        {
-            public int index = 0;
-
-            public Dictionary<string, string> sectionTags = new Dictionary<string, string>();
-            public List<SectionItemInfo> items = new List<SectionItemInfo>();
-        }
-
-        /// <summary>
-        /// Contains information on a section item info
-        /// </summary>
-        private class SectionItemInfo
-        {
-            public int index = 0;
-            public string content;
-
-            public Dictionary<string, string> sectionItemTags = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -284,156 +257,27 @@ namespace StaticWiki
             }
         }
 
-        private static void HandleSections(ref string finalText, List<SectionInfo> sections, Dictionary<string, string> userTags, ref string sectionText, ref int sectionStartIndex)
+        private static void GatherTemplates(ref string finalText, Dictionary<string, string> themeTemplates)
         {
-            var sectionTagRegex = new Regex("\\[sectiontag\\](.*?)\\[\\/sectiontag\\]");
-            var sectionItemTagRegex = new Regex("\\[sectionitemtag\\](.*?)\\[\\/sectionitemtag\\]");
+            var templateRegex = new Regex("(?sm)\\[template name=\\\"(.*?)\\\"\\](.*?)\\[\\/template\\]", RegexOptions.Multiline);
+            var templateItemRegex = new Regex("(?sm)\\[templateitem\\](.*?)\\[\\/templateitem\\]", RegexOptions.Multiline);
+            var templateTagRegex = new Regex("\\[templatetag\\](.*?)\\[\\/templatetag\\]");
+            var templateItemTagRegex = new Regex("\\[templateitemtag\\](.*?)\\[\\/templateitemtag\\]");
 
-            var beginSectionIndex = -1;
-            var endSectionIndex = -1;
-
-            var index = finalText.IndexOf(beginSectionTag);
-
-            if (index == -1)
+            foreach (Match templateMatch in templateRegex.Matches(finalText))
             {
-                sectionStartIndex = -1;
-
-                return;
-            }
-
-            finalText = finalText.Substring(0, index) + finalText.Substring(index + beginSectionTag.Length);
-            beginSectionIndex = index;
-
-            index = finalText.IndexOf(endSectionTag);
-
-            if (index == -1)
-            {
-                sectionStartIndex = -1;
-
-                return;
-            }
-
-            finalText = finalText.Substring(0, index) + finalText.Substring(index + endSectionTag.Length);
-            endSectionIndex = index;
-
-            sectionText = "";
-
-            if (beginSectionIndex != -1)
-            {
-                var sectionClonedText = finalText.Substring(beginSectionIndex, endSectionIndex - beginSectionIndex);
-                var processedText = new StringBuilder();
-
-                var beginSectionItemIndex = -1;
-                var endSectionItemIndex = -1;
-
-                index = sectionClonedText.IndexOf(beginSectionItemTag);
-
-                if (index == -1)
+                if(templateMatch.Groups.Count == 3)
                 {
-                    sectionStartIndex = -1;
+                    var templateName = templateMatch.Groups[1].Value;
+                    var templateContent = templateMatch.Groups[2].Value;
 
-                    return;
-                }
-
-                sectionClonedText = sectionClonedText.Substring(0, index) + sectionClonedText.Substring(index + beginSectionItemTag.Length);
-                beginSectionItemIndex = index;
-
-                index = sectionClonedText.IndexOf(endSectionItemTag);
-
-                if (index == -1)
-                {
-                    sectionStartIndex = -1;
-
-                    return;
-                }
-
-                sectionClonedText = sectionClonedText.Substring(0, index) + sectionClonedText.Substring(index + endSectionItemTag.Length);
-                endSectionItemIndex = index;
-
-                if (beginSectionItemIndex != -1)
-                {
-                    var sectionItemClonedText = sectionClonedText.Substring(beginSectionItemIndex, endSectionItemIndex - beginSectionItemIndex);
-
-                    if (sections.Count > 0)
+                    if(!themeTemplates.ContainsKey(templateName))
                     {
-                        foreach (var section in sections)
-                        {
-                            var sectionProcessedText = new StringBuilder(sectionClonedText.Substring(0, beginSectionItemIndex));
-
-                            sectionProcessedText = sectionProcessedText.Replace(sectionIndexTag, section.index.ToString());
-
-                            foreach (Match sectionTagMatch in sectionTagRegex.Matches(sectionProcessedText.ToString()))
-                            {
-                                if (sectionTagMatch.Groups.Count == 2)
-                                {
-                                    var tag = sectionTagMatch.Groups[1].Value;
-
-                                    if (section.sectionTags.ContainsKey(tag))
-                                    {
-                                        sectionProcessedText = sectionProcessedText.Replace(sectionTagMatch.Groups[0].Value, section.sectionTags[tag]);
-                                    }
-                                    else
-                                    {
-                                        sectionProcessedText = sectionProcessedText.Replace(sectionTagMatch.Groups[0].Value, "");
-                                    }
-                                }
-                            }
-
-                            foreach (var item in section.items)
-                            {
-                                var itemText = (string)sectionItemClonedText.Clone();
-
-                                itemText = itemText.Replace(sectionItemContentTag, item.content);
-                                itemText = itemText.Replace(sectionItemIndexTag, item.index.ToString());
-                                itemText = itemText.Replace(sectionIndexTag, section.index.ToString());
-
-                                foreach (Match sectionTagMatch in sectionTagRegex.Matches(itemText))
-                                {
-                                    if (sectionTagMatch.Groups.Count == 2)
-                                    {
-                                        var tag = sectionTagMatch.Groups[1].Value;
-
-                                        if (section.sectionTags.ContainsKey(tag))
-                                        {
-                                            itemText = itemText.Replace(sectionTagMatch.Groups[0].Value, section.sectionTags[tag]);
-                                        }
-                                        else
-                                        {
-                                            itemText = itemText.Replace(sectionTagMatch.Groups[0].Value, "");
-                                        }
-                                    }
-                                }
-
-                                foreach (Match sectionItemTagMatch in sectionItemTagRegex.Matches(itemText))
-                                {
-                                    if (sectionItemTagMatch.Groups.Count == 2)
-                                    {
-                                        var tag = sectionItemTagMatch.Groups[1].Value;
-
-                                        if (item.sectionItemTags.ContainsKey(tag))
-                                        {
-                                            itemText = itemText.Replace(sectionItemTagMatch.Groups[0].Value, item.sectionItemTags[sectionItemTagMatch.Groups[1].Value]);
-                                        }
-                                        else
-                                        {
-                                            itemText = itemText.Replace(sectionItemTagMatch.Groups[0].Value, "");
-                                        }
-                                    }
-                                }
-
-                                sectionProcessedText.Append(itemText);
-                            }
-
-                            sectionProcessedText.Append(sectionClonedText.Substring(endSectionItemIndex));
-                            processedText.Append(sectionProcessedText.ToString());
-                        }
+                        themeTemplates.Add(templateName, templateContent);
                     }
                 }
 
-                sectionStartIndex = beginSectionIndex;
-                sectionText = processedText.ToString();
-
-                finalText = finalText.Substring(0, beginSectionIndex) + finalText.Substring(endSectionIndex);
+                finalText = finalText.Replace(templateMatch.Groups[0].Value, "");
             }
         }
 
@@ -442,9 +286,7 @@ namespace StaticWiki
         /// </summary>
         /// <param name="finalText">Our current finalized text</param>
         /// <param name="contentText">Our content text</param>
-        /// <param name="sections">The sections for this page</param>
-        /// <param name="userTags">The usertags for this page</param>
-        private static void HandleContentTag(ref string finalText, string contentText, List<SectionInfo> sections, Dictionary<string, string> userTags)
+        private static void HandleContentTag(ref string finalText, string contentText)
         {
             var index = finalText.IndexOf(contentThemeTag);
 
@@ -673,83 +515,177 @@ namespace StaticWiki
             }
         }
 
-        private static List<SectionInfo> GatherSections(ref string contentText)
+        /// <summary>
+        /// Processes the templates in a page and applies the loaded theme templates to them
+        /// </summary>
+        /// <param name="contentText">The content text of the page</param>
+        /// <param name="themeTemplates">The available theme templates</param>
+        /// <param name="userTags">The available user tags</param>
+        private static void HandleTemplates(ref string contentText, Dictionary<string, string> themeTemplates, Dictionary<string, string> userTags)
         {
-            var sectionRegex = new Regex("(?sm)\\[section\\](.*?)\\[\\/section\\]", RegexOptions.Multiline);
-            var sectionTagRegex = new Regex("\\[sectiontag name=\\&quot;(.*?)\\&quot; value=\\&quot;(.*?)\\&quot;\\]");
-            var sectionItemRegex = new Regex("(?sm)\\[sectionitem\\](.*?)\\[\\/sectionitem\\]", RegexOptions.Multiline);
-            var sectionItemTagRegex = new Regex("\\[sectionitemtag name=\\&quot;(.*?)\\&quot; value=\\&quot;(.*?)\\&quot;\\]");
+            var templateRegex = new Regex("(?sm)\\[template name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/template\\]", RegexOptions.Multiline);
+            var templateTagRegex = new Regex("\\[templatetag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templatetag\\]");
+            var templateItemRegex = new Regex("(?sm)\\[templateitem\\](.*?)\\[\\/templateitem\\]", RegexOptions.Multiline);
+            var templateItemTagRegex = new Regex("(?sm)\\[templateitemtag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templateitemtag\\]");
+            var themeTemplateTagRegex = new Regex("\\[templatetag\\](.*?)\\[\\/templatetag\\]");
+            var themeTemplateItemTagRegex = new Regex("\\[templateitemtag\\](.*?)\\[\\/templateitemtag\\]");
+            var themeTemplateItemContentRegex = new Regex("(?sm)\\[templateitemcontent\\](.*?)\\[\\/templateitemcontent\\]", RegexOptions.Multiline);
+            var templateIndex = 0;
 
-            var outSections = new List<SectionInfo>();
-
-            foreach (Match m in sectionRegex.Matches(contentText))
+            foreach (Match m in templateRegex.Matches(contentText))
             {
-                if (m.Groups.Count == 2)
+                if (m.Groups.Count == 3)
                 {
-                    var sectionContent = m.Groups[1].Value;
+                    var index = 0;
+                    var templateName = m.Groups[1].Value;
+                    var templateContent = m.Groups[2].Value;
 
-                    var section = new SectionInfo()
+                    if(!themeTemplates.ContainsKey(templateName))
                     {
-                        index = outSections.Count,
-                    };
+                        contentText = contentText.Replace(m.Groups[0].Value, "");
 
-                    foreach (Match sectionTagMatch in sectionTagRegex.Matches(sectionContent))
+                        continue;
+                    }
+
+                    var templateText = themeTemplates[templateName];
+                    var templateTags = new Dictionary<string, string>();
+                    var templateItemTags = new Dictionary<string, string>();
+                    var templateItemIndex = 0;
+                    templateIndex++;
+
+                    foreach (Match templateTagMatch in templateTagRegex.Matches(templateContent))
                     {
-                        if(sectionTagMatch.Groups.Count == 3)
+                        if(templateTagMatch.Groups.Count == 3)
                         {
-                            var name = sectionTagMatch.Groups[1].Value;
-                            var value = sectionTagMatch.Groups[2].Value;
+                            var name = templateTagMatch.Groups[1].Value;
+                            var value = templateTagMatch.Groups[2].Value;
 
-                            if(!section.sectionTags.ContainsKey(name))
+                            if(!templateTags.ContainsKey(name))
                             {
-                                section.sectionTags.Add(name, value);
+                                templateTags.Add(name, value);
                             }
                         }
 
-                        sectionContent = sectionContent.Replace(sectionTagMatch.Groups[0].Value, "");
+                        templateContent = templateContent.Replace(templateTagMatch.Groups[0].Value, "");
                     }
 
-                    foreach(Match sectionItemMatch in sectionItemRegex.Matches(sectionContent))
+                    var templateProcessedText = (string)templateText.Clone();
+
+                    foreach (Match themeTemplateTagMatch in themeTemplateTagRegex.Matches(templateProcessedText.ToString()))
                     {
-                        if(sectionItemMatch.Groups.Count == 2)
+                        if (themeTemplateTagMatch.Groups.Count == 2)
                         {
-                            var sectionItemContent = sectionItemMatch.Groups[1].Value;
-                            var sectionItem = new SectionItemInfo()
-                            {
-                                index = section.items.Count,
-                            };
+                            var tag = themeTemplateTagMatch.Groups[1].Value;
 
-                            foreach (Match sectionItemTagMatch in sectionItemTagRegex.Matches(sectionItemContent))
+                            if (templateTags.ContainsKey(tag))
                             {
-                                if(sectionItemTagMatch.Groups.Count == 3)
+                                templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, templateTags[tag]);
+                            }
+                            else
+                            {
+                                templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, "");
+                            }
+                        }
+                    }
+
+                    var itemProcessedText = "";
+
+                    Match themeTemplateItemMatch = templateItemRegex.Match(templateProcessedText.ToString());
+
+                    if (themeTemplateItemMatch != null)
+                    {
+                        if (themeTemplateItemMatch.Groups.Count == 2)
+                        {
+                            foreach (Match templateItemMatch in templateItemRegex.Matches(templateContent))
+                            {
+                                if (templateItemMatch.Groups.Count == 2)
                                 {
-                                    var name = sectionItemTagMatch.Groups[1].Value;
-                                    var value = sectionItemTagMatch.Groups[2].Value;
+                                    var templateItemContent = templateItemMatch.Groups[1].Value;
 
-                                    if (!sectionItem.sectionItemTags.ContainsKey(name))
+                                    foreach (Match templateItemTagMatch in templateItemTagRegex.Matches(templateItemContent))
                                     {
-                                        sectionItem.sectionItemTags.Add(name, value);
+                                        if (templateItemTagMatch.Groups.Count == 3)
+                                        {
+                                            var name = templateItemTagMatch.Groups[1].Value;
+                                            var value = templateItemTagMatch.Groups[2].Value;
+
+                                            if (!templateItemTags.ContainsKey(name))
+                                            {
+                                                templateItemTags.Add(name, value);
+                                            }
+                                        }
+
+                                        templateItemContent = templateItemContent.Replace(templateItemTagMatch.Groups[0].Value, "");
+                                    }
+
+                                    var itemText = themeTemplateItemMatch.Groups[1].Value;
+
+                                    foreach (Match themeTemplateItemTagMatch in themeTemplateTagRegex.Matches(itemText))
+                                    {
+                                        if (themeTemplateItemTagMatch.Groups.Count == 2)
+                                        {
+                                            var tag = themeTemplateItemTagMatch.Groups[1].Value;
+
+                                            if (templateTags.ContainsKey(tag))
+                                            {
+                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateTags[tag]);
+                                            }
+                                            else
+                                            {
+                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
+                                            }
+                                        }
+                                    }
+
+                                    foreach (Match themeTemplateItemTagMatch in themeTemplateItemTagRegex.Matches(itemText))
+                                    {
+                                        if (themeTemplateItemTagMatch.Groups.Count == 2)
+                                        {
+                                            var tag = themeTemplateItemTagMatch.Groups[1].Value;
+
+                                            if (templateItemTags.ContainsKey(tag))
+                                            {
+                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateItemTags[themeTemplateItemTagMatch.Groups[1].Value]);
+                                            }
+                                            else
+                                            {
+                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
+                                            }
+                                        }
+                                    }
+
+                                    itemText = itemText.Replace(templateItemIndexTag, templateItemIndex.ToString());
+                                    itemText = itemText.Replace(templateIndexTag, templateIndex.ToString());
+
+                                    templateItemIndex++;
+
+                                    itemProcessedText += itemText;
+
+                                    index = templateContent.IndexOf(templateItemMatch.Groups[0].Value);
+
+                                    if (index != -1)
+                                    {
+                                        templateContent = templateContent.Substring(0, index) + itemProcessedText + templateContent.Substring(index + templateItemMatch.Groups[0].Value.Length);
                                     }
                                 }
-
-                                sectionItemContent = sectionItemContent.Replace(sectionItemTagMatch.Groups[0].Value, "");
                             }
 
-                            sectionItem.content = sectionItemContent;
-
-                            section.items.Add(sectionItem);
-
-                            sectionContent = sectionContent.Replace(sectionItemMatch.Groups[0].Value, "");
+                            templateProcessedText = templateProcessedText.Replace(themeTemplateItemMatch.Groups[0].Value, itemProcessedText);
                         }
                     }
 
-                    outSections.Add(section);
+                    index = contentText.IndexOf(m.Groups[0].Value);
+
+                    if(index != -1)
+                    {
+                        contentText = contentText.Substring(0, index) + templateProcessedText + contentText.Substring(index + m.Groups[0].Value.Length);
+                    }
+
+                    continue;
                 }
 
                 contentText = contentText.Replace(m.Groups[0].Value, "");
             }
-
-            return outSections;
         }
 
         /// <summary>
@@ -887,13 +823,13 @@ namespace StaticWiki
             var contentText = Markdown.ToHtml(sourceText, markdownPipeline);
             var processedTitle = MarkdownStrippedString(title, markdownPipeline);
             var userTags = new Dictionary<string, string>();
-            var sections = GatherSections(ref contentText);
+            var themeTemplates = new Dictionary<string, string>();
             var finalText = (string)themeText.Clone();
 
-            var sectionText = "";
-            var sectionStartIndex = -1;
+            GatherTemplates(ref finalText, themeTemplates);
 
-            HandleUserTags(ref finalText, userTags);
+            HandleUserTags(ref contentText, userTags);
+            HandleTemplates(ref contentText, themeTemplates, userTags);
             HandleTitleTag(ref finalText, processedTitle);
             HandlePageTitleTag(ref finalText, pageTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
@@ -901,13 +837,7 @@ namespace StaticWiki
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
             HandleBasenameTag(ref finalText, baseName);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
-            HandleSections(ref finalText, sections, userTags, ref sectionText, ref sectionStartIndex);
-            HandleContentTag(ref finalText, contentText, sections, userTags);
-
-            if (sectionStartIndex != -1)
-            {
-                finalText = finalText.Substring(0, sectionStartIndex) + sectionText + finalText.Substring(sectionStartIndex);
-            }
+            HandleContentTag(ref finalText, contentText);
 
             finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchURLs, disableAutoPageExtension, disableLinkCorrection);
 

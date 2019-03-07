@@ -143,6 +143,14 @@
 			<div class="flexhandler">
 				<div class="item">
 					<div class="col-sm-12">
+						[template name="thumbnails"]
+							[templateitem]
+							<div style="float: left">
+							  <img src="[templateitemtag]image[/templateitemtag]" class="img-thumbnail" alt="...">
+							  <p align="center"><strong>{TEMPLATEINDEX}-{TEMPLATEITEMINDEX}</strong></p>
+							</div>
+							[/templateitem]
+						[/template]
 						<h1>{PAGETITLE}</h1>
 
 						{BEGINIFCATEGORIES}
