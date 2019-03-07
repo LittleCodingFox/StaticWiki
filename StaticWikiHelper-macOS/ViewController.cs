@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using AppKit;
 using Foundation;
@@ -14,7 +16,7 @@ namespace StaticWikiHelpermacOS
 		private string sourceDirectory = "";
 		private string destinationDirectory = "";
 		private string defaultThemeName = "";
-		private List<KeyValuePair<string, string>>[] themes = new List<KeyValuePair<string, string>>[0];
+		private KeyValuePair<string, string>[] themes = new KeyValuePair<string, string>[0];
 		private string titleName = "";
 		private string navigationFileName = "";
 		private string[] contentExtensions = new string[0];
@@ -276,7 +278,7 @@ namespace StaticWikiHelpermacOS
 
         partial void updateNowButtonPressed(NSObject sender)
         {
-			if (!Directory.Exists(sourceDirectory) || !File.Exists(themeFileName))
+			if (!Directory.Exists(sourceDirectory) || themes.Any(x => !File.Exists(x.Value)))
 			{
 				return;
 			}

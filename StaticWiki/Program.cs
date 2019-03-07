@@ -10,7 +10,7 @@ namespace StaticWiki
         {
             string sourceDirectory = "";
             string destinationDirectory = "";
-            string themeFileName = "";
+            string defaultThemeName = "";
             KeyValuePair<string, string>[] themes = new KeyValuePair<string, string>[0];
             string titleName = "";
             string navigationFileName = "";
@@ -42,10 +42,6 @@ namespace StaticWiki
                 {
                     destinationDirectory = args[i + 1];
                 }
-                else if (args[i] == "-theme" && i + 1 < args.Length)
-                {
-                    themeFileName = args[i + 1];
-                }
                 else if (args[i] == "-title" && i + 1 < args.Length)
                 {
                     titleName = args[i + 1];
@@ -68,7 +64,7 @@ namespace StaticWiki
 
             if (workspaceDirectory.Length > 0)
             {
-                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref themeFileName,
+                if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref defaultThemeName,
                     ref themes, ref titleName, ref navigationFileName, ref contentExtensions,
                     ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
                 {
@@ -81,7 +77,7 @@ namespace StaticWiki
             Console.WriteLine("StaticWiki starting up with values:");
             Console.WriteLine(string.Format("From Directory: \"{0}\"", sourceDirectory));
             Console.WriteLine(string.Format("To Directory: \"{0}\"", destinationDirectory));
-            Console.WriteLine(string.Format("Theme File: \"{0}\"", themeFileName));
+            Console.WriteLine(string.Format("Theme File: \"{0}\"", defaultThemeName));
             Console.WriteLine(string.Format("Navigation File: \"{0}\"", navigationFileName));
             Console.WriteLine(string.Format("Content Extensions: \"{0}\"", string.Join(", ", contentExtensions.Select(x => string.Format(".{0}", x.Trim())).ToArray())));
             Console.WriteLine(string.Format("Base Page Title: \"{0}\"", titleName));
@@ -89,8 +85,8 @@ namespace StaticWiki
             Console.WriteLine(string.Format("Link Correction is {0}", disableLinkCorrection ? "DISABLED" : "ENABLED"));
             Console.WriteLine(string.Format("Markdown Extensions: \"{0}\"", string.Join(", ", markdownExtensions)));
 
-            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, themeFileName, navigationFileName, contentExtensions.ToArray(), titleName, disableAutoPageExtension,
-                disableLinkCorrection, markdownExtensions, ref logMessage);
+            StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, defaultThemeName, themes, navigationFileName,
+                contentExtensions.ToArray(), titleName, disableAutoPageExtension, disableLinkCorrection, markdownExtensions, ref logMessage);
 
             Console.WriteLine(logMessage);
         }
