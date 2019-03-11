@@ -237,7 +237,7 @@ namespace StaticWiki
 
                 if(navigationContent != null && navigationContent.Length > 0)
                 {
-                    processedText.Append(Markdown.ToHtml(navigationContent, pipeline));
+                    processedText.Append(navigationContent);
                 }
                 else
                 {
@@ -712,9 +712,11 @@ namespace StaticWiki
         /// <param name="disableAutoPageExtension">Disables automatically adding page extensions to page links</param>
         /// <param name="disableLinkCorrection">Disables automatically replacing invalid links with "#"</param>
         /// <returns>The processed links</returns>
-        private static string ProcessLinksInContent(string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchURLs, bool disableAutoPageExtension, bool disableLinkCorrection)
+        private static string HandlePageLinks(string pageName, string content, string sourceDirectory, string currentDirectory, string pageExtension, string[] searchURLs, bool disableAutoPageExtension, bool disableLinkCorrection)
         {
             var linkHrefRegex = new Regex("<a href=\"(.*?)\">((?:.(?!\\<\\/a\\>))*.)<\\/a>");
+            var pageLinkRegex = new Regex("\\[pagelink\\](.*?)\\[\\/pagelink\\]");
+            var activePageRegex = new Regex("(?sm)\\[activepage name=\\\"(.*?)\\\"\\](.*?)\\[\\/activepage\\]");
 
             foreach (Match linkMatch in linkHrefRegex.Matches(content))
             {
@@ -747,6 +749,59 @@ namespace StaticWiki
                         {
                             content = content.Replace(linkMatch.Groups[0].Value, string.Format("<a href=\"{0}\">{1}</a>", url, linkMatch.Groups[2].Value));
                         }
+                    }
+                }
+            }
+
+            foreach(Match pageLinkMatch in pageLinkRegex.Matches(content))
+            {
+                if (pageLinkMatch.Groups.Count == 2)
+                {
+                    var urlGroup = pageLinkMatch.Groups[1];
+                    var url = urlGroup.Value.Replace("\\", "/");
+                    var invalid = false;
+                    var filePath = Path.Combine(sourceDirectory, currentDirectory, SaneFileName(url));
+
+                    if (!Directory.Exists(filePath) && !File.Exists(filePath))
+                    {
+                        var recursiveBack = currentDirectory.Length > 0 ?
+                            string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
+
+                        if (searchURLs.Where(x => x.EndsWith(SaneFileName(url))).Any())
+                        {
+                            url = string.Format("{0}{1}{2}", recursiveBack, SaneFileName(searchURLs.Where(x => x.EndsWith(SaneFileName(url))).FirstOrDefault()), disableAutoPageExtension ? "" : pageExtension);
+                        }
+                        else
+                        {
+                            invalid = true;
+                        }
+
+                        if (invalid && !disableLinkCorrection)
+                        {
+                            content = content.Replace(pageLinkMatch.Groups[0].Value, pageLinkMatch.Groups[1].Value);
+                        }
+                        else
+                        {
+                            content = content.Replace(pageLinkMatch.Groups[0].Value, url);
+                        }
+                    }
+                }
+            }
+
+            foreach(Match activePageMatch in activePageRegex.Matches(content))
+            {
+                if (activePageMatch.Groups.Count == 3)
+                {
+                    var activePageName = activePageMatch.Groups[1].Value;
+                    var activeContent = activePageMatch.Groups[2].Value;
+
+                    if(pageName.ToLower() == activePageName.ToLower())
+                    {
+                        content = content.Replace(activePageMatch.Groups[0].Value, activeContent);
+                    }
+                    else
+                    {
+                        content = content.Replace(activePageMatch.Groups[0].Value, "");
                     }
                 }
             }
@@ -822,7 +877,15 @@ namespace StaticWiki
             var themeTemplates = new Dictionary<string, string>();
             var finalText = (string)themeText.Clone();
 
+            if(navigationContent.Length > 0)
+            {
+                navigationContent = Markdown.ToHtml(navigationContent, markdownPipeline);
+            }
+
             GatherTemplates(ref finalText, themeTemplates);
+
+            HandleUserTags(ref navigationContent, userTags);
+            HandleTemplates(ref navigationContent, themeTemplates, userTags);
 
             HandleUserTags(ref contentText, userTags);
             HandleTemplates(ref contentText, themeTemplates, userTags);
@@ -835,7 +898,8 @@ namespace StaticWiki
             HandleRootDirectoryTag(ref finalText, currentDirectory);
             HandleContentTag(ref finalText, contentText);
 
-            finalText = ProcessLinksInContent(finalText, sourceDirectory, currentDirectory, pageExtension, searchURLs, disableAutoPageExtension, disableLinkCorrection);
+            finalText = HandlePageLinks(baseName, finalText, sourceDirectory, currentDirectory,
+                pageExtension, searchURLs, disableAutoPageExtension, disableLinkCorrection);
 
             return finalText;
         }
@@ -845,9 +909,11 @@ namespace StaticWiki
         /// </summary>
         /// <param name="themeFileName">The theme's file name</param>
         /// <param name="destinationDirectory">Our destination directory</param>
+        /// <param name="otherThemeFiles">The list of other theme files</param>
         /// <param name="logMessage">Our current log message</param>
         /// <returns>Whether we successfully copied the files</returns>
-        private static bool CopyThemeResourcesToFolder(string themeFileName, string destinationDirectory, ref string logMessage)
+        private static bool CopyThemeResourcesToFolder(string themeFileName, string destinationDirectory,
+            string[] otherThemeFiles, ref string logMessage)
         {
             var files = new string[0];
             var themeDirectory = Path.GetDirectoryName(themeFileName);
@@ -859,7 +925,8 @@ namespace StaticWiki
 
                 foreach (var file in files)
                 {
-                    if (file == Path.GetFullPath(themeFileName))
+                    if (file == Path.GetFullPath(themeFileName) ||
+                        otherThemeFiles.Any(x => x == file))
                     {
                         continue;
                     }
@@ -1004,7 +1071,12 @@ namespace StaticWiki
 
             foreach(var pair in themes)
             {
-                CopyThemeResourcesToFolder(pair.Value, destinationDirectory, ref logMessage);
+                var otherThemeFiles = themes
+                    .Where(x => x.Key != pair.Key)
+                    .Select(x => x.Value)
+                    .ToArray();
+
+                CopyThemeResourcesToFolder(pair.Value, destinationDirectory, otherThemeFiles, ref logMessage);
             }
 
             var navigationInfo = new List<KeyValuePair<string, string>>();
