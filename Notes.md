@@ -1,5 +1,3 @@
-[title]Notes and Documentation[/title]
-
 # Page Titles
 
 The `Title` option in `staticwiki.ini` is the base page title - The pages generated will have a title in the form of `Title - Current Page Title`.
@@ -117,7 +115,7 @@ Templates can have tags and items, and each item can have tags. Tags can have mu
 
 Any other content in a template item is added as content of the template item with the `{TEMPLATEITEMCONTENT}` theme tag.
 
-You can find an example of a template in the default theme file and in the [Templates](Templates) sample page.
+You can find an example of a template in the default theme file and in the Templates sample page.
 
 # Active Page
 
