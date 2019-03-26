@@ -288,3 +288,4 @@ __pycache__/
 *.xsd.cs
 TestOut/
 Sample/Content/staticwiki/
+.DS_Store

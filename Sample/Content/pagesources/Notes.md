@@ -109,6 +109,33 @@ These are the available extensions:
 
 You can find more details on this in the [Markdig](https://github.com/lunet-io/markdig) page.
 
+# Templates
+
+You can create templates in a theme, and use them in a page, both in navigation and the page content.
+
+Templates can have tags and items, and each item can have tags. Tags can have multiple lines.
+
+Any other content in a template item is added as content of the template item with the `{TEMPLATEITEMCONTENT}` theme tag.
+
+You can find an example of a template in the default theme file and in the [Templates](Templates) sample page.
+
+# Active Page
+
+You can add content if a page is active using the `[activepage name="Your page name here"]your content goes here[/activepage]` tag.
+
+You can also add a link to a page from anywhere using the `[pagelink]page name[/pagelink]` tag, which will automatically use `../` when needed to make sure it's in the right folder.
+
+# Using themes
+
+To use themes, you must specify the themes in the `staticwiki.ini` file. You must specify the default theme name as well as a list of names and paths.
+
+```
+DefaultThemeName=Default
+Themes=Default:staticwikitheme/theme.html
+```
+
+To override a specific theme in a page, you can use the `[theme]theme name[/theme]` tag.
+
 # Theme sections
 
 Special sections in themes are:
@@ -132,4 +159,6 @@ Special sections in themes are:
 - `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
 - `{BASENAME}` - The name of the current file
 - `{PAGETITLE}` - The title of the current file
-
+- `{TEMPLATEINDEX}` - The index of a template in a page.
+- `{TEMPLATEITEMINDEX}` - The index of a template item inside a template.
+- `{TEMPLATEITEMCONTENT}` - The content of a template item is put here.

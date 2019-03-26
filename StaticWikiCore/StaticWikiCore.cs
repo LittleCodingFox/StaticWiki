@@ -716,7 +716,8 @@ namespace StaticWiki
         {
             var linkHrefRegex = new Regex("<a href=\"(.*?)\">((?:.(?!\\<\\/a\\>))*.)<\\/a>");
             var pageLinkRegex = new Regex("\\[pagelink\\](.*?)\\[\\/pagelink\\]");
-            var activePageRegex = new Regex("(?sm)\\[activepage name=\\\"(.*?)\\\"\\](.*?)\\[\\/activepage\\]");
+            var activePageRegex = new Regex("(?sm)\\[activepage name=\\\"(.*?)\\\"\\](.*?)\\[\\/activepage\\]", RegexOptions.Multiline);
+            var activePageRegexAlternative = new Regex("(?sm)\\[activepage name=&quot;(.*?)&quot;\\](.*?)\\[\\/activepage\\]", RegexOptions.Multiline);
 
             foreach (Match linkMatch in linkHrefRegex.Matches(content))
             {
@@ -796,6 +797,24 @@ namespace StaticWiki
                     var activeContent = activePageMatch.Groups[2].Value;
 
                     if(pageName.ToLower() == activePageName.ToLower())
+                    {
+                        content = content.Replace(activePageMatch.Groups[0].Value, activeContent);
+                    }
+                    else
+                    {
+                        content = content.Replace(activePageMatch.Groups[0].Value, "");
+                    }
+                }
+            }
+
+            foreach (Match activePageMatch in activePageRegexAlternative.Matches(content))
+            {
+                if (activePageMatch.Groups.Count == 3)
+                {
+                    var activePageName = activePageMatch.Groups[1].Value;
+                    var activeContent = activePageMatch.Groups[2].Value;
+
+                    if (pageName.ToLower() == activePageName.ToLower())
                     {
                         content = content.Replace(activePageMatch.Groups[0].Value, activeContent);
                     }
