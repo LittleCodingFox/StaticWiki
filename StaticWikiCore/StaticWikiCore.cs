@@ -43,6 +43,7 @@ namespace StaticWiki
 
         #region Misc Constants
         private const string categoryPrefix = "Category:";
+        private const string categoryListBaseName = "CategoryList";
         #endregion
 
         #region Configuration Constants
@@ -1369,6 +1370,20 @@ namespace StaticWiki
                 }
             }
 
+            if (categoriesDictionary.Count > 0 && !fileCache.ContainsKey(categoryListBaseName))
+            {
+                var fileInfo = new FileInfo()
+                {
+                    pageTitle = "Category List",
+                    baseName = categoryListBaseName,
+                    saneBaseName = categoryListBaseName,
+                    text = "",
+                    theme = defaultTheme.ToLowerInvariant(),
+                };
+
+                fileCache.Add(categoryListBaseName, fileInfo);
+            }
+
             foreach (var file in fileCache.Keys)
             {
                 var baseName = file;
@@ -1390,10 +1405,11 @@ namespace StaticWiki
 
                 var categoryInfo = new List<KeyValuePair<string, string>>();
                 var isCategoryPage = saneBaseName.StartsWith(SaneFileName(categoryPrefix));
+                var isCategoryList = saneBaseName == categoryListBaseName;
 
                 //If we're a category page and our base name doesn't match, then that means we're a generated category page.
                 //If there is another file whose baseName is equal to our sane base name, then there exists a page that should override the generated one. Skip this one.
-                if(isCategoryPage && baseName != saneBaseName && fileCache.Where(x => x.Value.baseName == saneBaseName).Any())
+                if (isCategoryPage && baseName != saneBaseName && fileCache.Where(x => x.Value.baseName == saneBaseName).Any())
                 {
                     continue;
                 }
@@ -1431,6 +1447,13 @@ namespace StaticWiki
                         }
                     }
                 }
+                else if(isCategoryList)
+                {
+                    foreach(var pair in categoriesDictionary)
+                    {
+                        categoryInfo.Add(new KeyValuePair<string, string>(pair.Key, FormattedCategoryName(pair.Key)));
+                    }
+                }
                 else
                 {
                     foreach (var pair in categoriesDictionary)
@@ -1447,7 +1470,7 @@ namespace StaticWiki
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
                     fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
-                    pageExtension, isCategoryPage, disableAutoPageExtension, disableLinkCorrection, navigationContent, pipeline);
+                    pageExtension, isCategoryPage || isCategoryList, disableAutoPageExtension, disableLinkCorrection, navigationContent, pipeline);
 
                 try
                 {
