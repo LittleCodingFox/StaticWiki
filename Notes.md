@@ -123,6 +123,10 @@ You can add content if a page is active using the `[activepage name="Your page n
 
 You can also add a link to a page from anywhere using the `[pagelink]page name[/pagelink]` tag, which will automatically use `../` when needed to make sure it's in the right folder.
 
+# TOC
+
+You can make a table of contents section for a page by adding a `[toc]contents[/toc]` tag to it. The contents you put in it will be applied in the `{TOC}` section of your theme, if that theme supports it.
+
 # Using themes
 
 To use themes, you must specify the themes in the `staticwiki.ini` file. You must specify the default theme name as well as a list of names and paths.
@@ -160,3 +164,4 @@ Special sections in themes are:
 - `{TEMPLATEINDEX}` - The index of a template in a page.
 - `{TEMPLATEITEMINDEX}` - The index of a template item inside a template.
 - `{TEMPLATEITEMCONTENT}` - The content of a template item is put here.
+-  `{TOC}` - The `[toc]` tag in a page will be applied here.

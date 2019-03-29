@@ -151,6 +151,18 @@
 							</div>
 							[/templateitem]
 						[/template]
+
+                        [template name="toc"]
+                            <ul name="nav-item">
+
+                                [templateitem]
+                                <li>
+                                    <a href="[templateitemtag]page-link[/templateitemtag]">[templateitemtag]page-name[/templateitemtag]</a>
+                                </li>
+                                [/templateitem]
+                            </ul>
+                        [/template]
+
 						<h1>{PAGETITLE}</h1>
 
 						{BEGINIFCATEGORIES}
@@ -163,6 +175,8 @@
 						{ENDIFCATEGORIES}
 						
 						<hr>
+
+                        {TOC}
 
 						{CONTENT}
 						

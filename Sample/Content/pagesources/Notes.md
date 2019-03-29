@@ -1,4 +1,62 @@
 [title]Notes and Documentation[/title]
+[toc]
+[template name="toc"]
+[templateitem]
+[templateitemtag name="page-link"]#page-titles[/templateitemtag]
+[templateitemtag name="page-name"]Page Titles[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#linking-pages[/templateitemtag]
+[templateitemtag name="page-name"]Linking Pages[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#categories[/templateitemtag]
+[templateitemtag name="page-name"]Categories[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#navigation[/templateitemtag]
+[templateitemtag name="page-name"]Navigation[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#custom-html-and-images[/templateitemtag]
+[templateitemtag name="page-name"]Custom HTML and Images[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#markdown-extensions[/templateitemtag]
+[templateitemtag name="page-name"]Markdown Extensions[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#templates[/templateitemtag]
+[templateitemtag name="page-name"]Templates[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#active-page[/templateitemtag]
+[templateitemtag name="page-name"]Active Page[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#toc[/templateitemtag]
+[templateitemtag name="page-name"]TOC[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#using-themes[/templateitemtag]
+[templateitemtag name="page-name"]Using Themes[/templateitemtag]
+[/templateitem]
+
+[templateitem]
+[templateitemtag name="page-link"]#theme-sections[/templateitemtag]
+[templateitemtag name="page-name"]Theme Sections[/templateitemtag]
+[/templateitem]
+[/template]
+[/toc]
 
 # Page Titles
 
@@ -124,6 +182,10 @@ You can find an example of a template in the default theme file and in the [Temp
 You can add content if a page is active using the `[activepage name="Your page name here"]your content goes here[/activepage]` tag.
 
 You can also add a link to a page from anywhere using the `[pagelink]page name[/pagelink]` tag, which will automatically use `../` when needed to make sure it's in the right folder.
+
+# TOC
+
+You can make a table of contents section for a page by adding a `[toc]contents[/toc]` tag to it. The contents you put in it will be applied in the `{TOC}` section of your theme, if that theme supports it.
 
 # Using themes
 

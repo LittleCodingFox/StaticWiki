@@ -39,6 +39,7 @@ namespace StaticWiki
         private const string templateIndexTag = "{TEMPLATEINDEX}";
         private const string templateItemIndexTag = "{TEMPLATEITEMINDEX}";
         private const string templateItemContentTag = "{TEMPLATEITEMCONTENT}";
+        private const string tocTag = "{TOC}";
         #endregion
 
         #region Misc Constants
@@ -686,6 +687,32 @@ namespace StaticWiki
         }
 
         /// <summary>
+        /// Handles the TOC Tag from the current content text, extracting it
+        /// </summary>
+        /// <param name="contentText">The current content text</param>
+        /// <param name="tocContent">The TOC Content, if any</param>
+        private static void HandleTOCTag(ref string contentText, out string tocContent)
+        {
+            var regex = new Regex("(?sm)\\[toc\\](.*?)\\[\\/toc\\]", RegexOptions.Multiline);
+
+            var match = regex.Match(contentText);
+
+            if(match != null)
+            {
+                if(match.Groups.Count == 2)
+                {
+                    tocContent = match.Groups[1].Value;
+
+                    contentText = contentText.Replace(match.Groups[0].Value, "");
+
+                    return;
+                }
+            }
+
+            tocContent = "";
+        }
+
+        /// <summary>
         /// Handles the basename tag from the current finalized text
         /// </summary>
         /// <param name="finalText">Our current finalized text</param>
@@ -729,7 +756,7 @@ namespace StaticWiki
                     var invalid = false;
                     var filePath = url.Contains("://") ? url : Path.Combine(sourceDirectory, currentDirectory, SaneFileName(url));
 
-                    if (!url.Contains("://") && !Directory.Exists(filePath) && !File.Exists(filePath))
+                    if (!url.Contains("://") && !Directory.Exists(filePath) && !File.Exists(filePath) && !url.StartsWith("#"))
                     {
                         var recursiveBack = currentDirectory.Length > 0 ?
                             string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
@@ -896,6 +923,7 @@ namespace StaticWiki
             var userTags = new Dictionary<string, string>();
             var themeTemplates = new Dictionary<string, string>();
             var finalText = (string)themeText.Clone();
+            var tocContent = "";
 
             if(navigationContent.Length > 0)
             {
@@ -904,11 +932,19 @@ namespace StaticWiki
 
             GatherTemplates(ref finalText, themeTemplates);
 
+            HandleTOCTag(ref contentText, out tocContent);
+
             HandleUserTags(ref navigationContent, userTags);
             HandleTemplates(ref navigationContent, themeTemplates, userTags);
 
             HandleUserTags(ref contentText, userTags);
             HandleTemplates(ref contentText, themeTemplates, userTags);
+
+            HandleUserTags(ref tocContent, userTags);
+            HandleTemplates(ref tocContent, themeTemplates, userTags);
+
+            finalText = finalText.Replace(tocTag, tocContent);
+
             HandleTitleTag(ref finalText, processedTitle);
             HandlePageTitleTag(ref finalText, pageTitle);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
@@ -1167,8 +1203,11 @@ namespace StaticWiki
                 }
                 else if (extension == "Auto Identifiers".ToUpper())
                 {
+                    Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions options = 
+                        Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions.AllowOnlyAscii;
+
                     usedExtensions.Add("Auto Identifiers");
-                    pipelineBuilder = pipelineBuilder.UseAutoIdentifiers();
+                    pipelineBuilder = pipelineBuilder.UseAutoIdentifiers(options);
                 }
                 else if (extension == "Auto Links".ToUpper())
                 {
