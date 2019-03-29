@@ -527,12 +527,11 @@ namespace StaticWiki
         private static void HandleTemplates(ref string contentText, Dictionary<string, string> themeTemplates, Dictionary<string, string> userTags)
         {
             var templateRegex = new Regex("(?sm)\\[template name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/template\\]", RegexOptions.Multiline);
-            var templateTagRegex = new Regex("\\[templatetag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templatetag\\]");
+            var templateTagRegex = new Regex("(?sm)\\[templatetag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templatetag\\]");
             var templateItemRegex = new Regex("(?sm)\\[templateitem\\](.*?)\\[\\/templateitem\\]", RegexOptions.Multiline);
             var templateItemTagRegex = new Regex("(?sm)\\[templateitemtag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templateitemtag\\]");
             var themeTemplateTagRegex = new Regex("\\[templatetag\\](.*?)\\[\\/templatetag\\]");
             var themeTemplateItemTagRegex = new Regex("\\[templateitemtag\\](.*?)\\[\\/templateitemtag\\]");
-            var themeTemplateItemContentRegex = new Regex("(?sm)\\[templateitemcontent\\](.*?)\\[\\/templateitemcontent\\]", RegexOptions.Multiline);
             var templateIndex = 0;
 
             foreach (Match m in templateRegex.Matches(contentText))
