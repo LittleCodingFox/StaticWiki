@@ -981,7 +981,7 @@ namespace StaticWiki
                 foreach (var file in files)
                 {
                     if (file == Path.GetFullPath(themeFileName) ||
-                        otherThemeFiles.Any(x => x == file))
+                        otherThemeFiles.Any(x => x.Replace("\\", "/") == file.Replace("\\", "/")))
                     {
                         continue;
                     }
