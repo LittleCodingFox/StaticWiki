@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="StaticWikiHelper.MainWindow"
+        Title="StaticWikiHelper">
+	<DockPanel>
+		<Menu DockPanel.Dock="Top">
+			<MenuItem Header="_File">
+				<MenuItem Header="_Open" Click="OpenProject"/>
+			</MenuItem>
+		</Menu>
+
+		<StackPanel HorizontalAlignment="Center">
+			<Label x:Name="noProjectLabel"
+				   VerticalAlignment="Center">No Project Loaded</Label>
+			
+			<Label x:Name="projectLoadedLabel"
+				   VerticalAlignment="Center">Project Loaded</Label>
+
+			<CheckBox x:Name="autoUpdateCheckbox"
+					  Checked="EnableAutoUpdates"
+					  Unchecked="DisableAutoUpdates"
+					  Margin="10, 15"
+					  Width="150"
+					  IsChecked="True">Enable auto updates</CheckBox>
+			
+			<Button x:Name="updateButton"
+					Click="HandleManualUpdate"
+					Width="100"
+					Height="30"
+					Margin="10">Update now</Button>
+		</StackPanel>
+	</DockPanel>
+</Window>

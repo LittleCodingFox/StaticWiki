@@ -1,18 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWiki", "StaticWiki\StaticWiki.csproj", "{1A82C1CB-B48F-4B2A-A2F1-B9C2094FB615}"
-	ProjectSection(ProjectDependencies) = postProject
-		{F180A3D7-2DAD-4727-B9A9-20C5A79F034C} = {F180A3D7-2DAD-4727-B9A9-20C5A79F034C}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWikiCore", "StaticWikiCore\StaticWikiCore.csproj", "{AED18D88-6605-4FB3-BAA9-78927DCAE3E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWikiCore", "StaticWikiCore\StaticWikiCore.csproj", "{F180A3D7-2DAD-4727-B9A9-20C5A79F034C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWiki", "StaticWiki\StaticWiki.csproj", "{CC974A49-66A8-4318-A8B6-65ABC72AA345}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWikiHelper", "StaticWikiHelper\StaticWikiHelper.csproj", "{004193A9-0359-4169-8F2E-31F270DB63D8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWikiHelper-macOS", "StaticWikiHelper-macOS\StaticWikiHelper-macOS.csproj", "{6A2BE81F-3A51-4AB4-BF8A-F5633CA3EE58}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StaticWikiHelper", "StaticWikiHelper\StaticWikiHelper.csproj", "{DDD97B4E-2736-4C60-BCD3-DBE3264D9D7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,27 +15,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{1A82C1CB-B48F-4B2A-A2F1-B9C2094FB615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1A82C1CB-B48F-4B2A-A2F1-B9C2094FB615}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1A82C1CB-B48F-4B2A-A2F1-B9C2094FB615}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1A82C1CB-B48F-4B2A-A2F1-B9C2094FB615}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F180A3D7-2DAD-4727-B9A9-20C5A79F034C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F180A3D7-2DAD-4727-B9A9-20C5A79F034C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F180A3D7-2DAD-4727-B9A9-20C5A79F034C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F180A3D7-2DAD-4727-B9A9-20C5A79F034C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{004193A9-0359-4169-8F2E-31F270DB63D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{004193A9-0359-4169-8F2E-31F270DB63D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{004193A9-0359-4169-8F2E-31F270DB63D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{004193A9-0359-4169-8F2E-31F270DB63D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6A2BE81F-3A51-4AB4-BF8A-F5633CA3EE58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6A2BE81F-3A51-4AB4-BF8A-F5633CA3EE58}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6A2BE81F-3A51-4AB4-BF8A-F5633CA3EE58}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6A2BE81F-3A51-4AB4-BF8A-F5633CA3EE58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AED18D88-6605-4FB3-BAA9-78927DCAE3E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AED18D88-6605-4FB3-BAA9-78927DCAE3E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AED18D88-6605-4FB3-BAA9-78927DCAE3E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AED18D88-6605-4FB3-BAA9-78927DCAE3E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC974A49-66A8-4318-A8B6-65ABC72AA345}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC974A49-66A8-4318-A8B6-65ABC72AA345}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC974A49-66A8-4318-A8B6-65ABC72AA345}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC974A49-66A8-4318-A8B6-65ABC72AA345}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDD97B4E-2736-4C60-BCD3-DBE3264D9D7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDD97B4E-2736-4C60-BCD3-DBE3264D9D7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDD97B4E-2736-4C60-BCD3-DBE3264D9D7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDD97B4E-2736-4C60-BCD3-DBE3264D9D7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {5EDD2F5E-CF00-480A-BDF5-C6FE51D36FA8}
+		SolutionGuid = {436C8285-360A-4395-8739-74C62E3DDD43}
 	EndGlobalSection
 EndGlobal
