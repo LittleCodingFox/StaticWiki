@@ -459,7 +459,8 @@ namespace StaticWiki
 
                 for (var j = 0; j < categoriesInfo.Count; j++)
                 {
-                    var name = categoriesInfo[j].Key;
+                    //Sanitize categories with underscores so they're spaces
+                    var name = categoriesInfo[j].Key.Replace('_', ' ');
                     var link = SaneFileName(categoriesInfo[j].Value);
                     var categoryItemText = pageCategoryClonedText.Replace(categoryNameThemeTag, name).Replace(categoryLinkThemeTag, link);
 
@@ -1366,6 +1367,9 @@ namespace StaticWiki
                         text = content,
                         theme = themeName.ToLowerInvariant(),
                     };
+
+                    //Sanitize page titles
+                    fileInfo.pageTitle = fileInfo.pageTitle.Replace('_', ' ');
 
                     fileCache.Add(baseName, fileInfo);
                 }
