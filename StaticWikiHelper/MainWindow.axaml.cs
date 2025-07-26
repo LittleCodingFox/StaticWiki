@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
-using Avalonia.Platform.Storage;
 using StaticWiki;
 using System;
 using System.Collections.Generic;
@@ -29,6 +28,7 @@ namespace StaticWikiHelper
         private string[] markdownExtensions = [];
 
         private bool autoUpdatesEnabled = true;
+        private bool forceUpdate = false;
 
         private Thread workThread;
         private bool shouldTerminateWorkThread = false;
@@ -58,11 +58,12 @@ namespace StaticWikiHelper
                             return;
                         }
 
-                        shouldProcessWork = shouldUpdate && autoUpdatesEnabled;
+                        shouldProcessWork = (shouldUpdate && autoUpdatesEnabled) || forceUpdate;
 
                         if (shouldProcessWork)
                         {
                             shouldUpdate = false;
+                            forceUpdate = false;
                         }
                     }
 
@@ -167,7 +168,7 @@ namespace StaticWikiHelper
 
             var folder = task.Result[0];
 
-            var basePath = folder.Path.AbsolutePath;
+            var basePath = Uri.UnescapeDataString(folder.Path.AbsolutePath);
 
             Log($"Attempting to op+en project at {basePath}");
 
@@ -236,7 +237,7 @@ namespace StaticWikiHelper
 
             lock (this)
             {
-                shouldUpdate = true;
+                forceUpdate = true;
             }
         }
 
