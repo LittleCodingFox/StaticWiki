@@ -17,6 +17,7 @@ namespace StaticWiki
             string[] contentExtensions = new string[0];
             bool disableAutoPageExtension = false;
             bool disableLinkCorrection = false;
+            bool showCategoryPrefixInCategoryPageTitles = true;
             string[] markdownExtensions = new string[0];
 
             if (args.Length == 0)
@@ -65,8 +66,8 @@ namespace StaticWiki
             if (workspaceDirectory.Length > 0)
             {
                 if(!StaticWikiCore.GetWorkspaceDetails(workspaceDirectory, ref sourceDirectory, ref destinationDirectory, ref defaultThemeName,
-                    ref themes, ref titleName, ref navigationFileName, ref contentExtensions,
-                    ref disableAutoPageExtension, ref disableLinkCorrection, ref markdownExtensions, ref logMessage))
+                    ref themes, ref titleName, ref navigationFileName, ref contentExtensions, ref disableAutoPageExtension,
+                    ref disableLinkCorrection, ref markdownExtensions, ref showCategoryPrefixInCategoryPageTitles, ref logMessage))
                 {
                     Console.WriteLine(logMessage);
 
@@ -83,10 +84,13 @@ namespace StaticWiki
             Console.WriteLine(string.Format("Base Page Title: \"{0}\"", titleName));
             Console.WriteLine(string.Format("Auto Page Extensions are {0}", disableAutoPageExtension ? "DISABLED" : "ENABLED"));
             Console.WriteLine(string.Format("Link Correction is {0}", disableLinkCorrection ? "DISABLED" : "ENABLED"));
+            Console.WriteLine(string.Format("Category Prefix in Category Page Titles is {0}",
+                showCategoryPrefixInCategoryPageTitles ? "ENABLED" : "DISABLED"));
             Console.WriteLine(string.Format("Markdown Extensions: \"{0}\"", string.Join(", ", markdownExtensions)));
 
             StaticWikiCore.ProcessDirectory(sourceDirectory, destinationDirectory, defaultThemeName, themes, navigationFileName,
-                contentExtensions.ToArray(), titleName, disableAutoPageExtension, disableLinkCorrection, markdownExtensions, ref logMessage);
+                contentExtensions.ToArray(), titleName, disableAutoPageExtension, disableLinkCorrection, markdownExtensions,
+                showCategoryPrefixInCategoryPageTitles, ref logMessage);
 
             Console.WriteLine(logMessage);
         }

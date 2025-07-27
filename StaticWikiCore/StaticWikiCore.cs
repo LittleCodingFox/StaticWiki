@@ -59,6 +59,7 @@ namespace StaticWiki
         private const string configurationDisableAutoPageExtensionsName = "DisableAutoPageExtensions";
         private const string configurationDisableLinkCorrectionName = "DisableLinkCorrection";
         private const string configurationMarkdownExtensionsName = "MarkdownExtensions";
+        private const string configurationShowCategoryPrefixInCategoryPagesTitles = "ShowCategoryPrefixInCategoryPageTitles";
         #endregion
 
         /// <summary>
@@ -912,7 +913,8 @@ namespace StaticWiki
         /// <returns>The processed page contents</returns>
         public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
-            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, string navigationContent, MarkdownPipeline markdownPipeline)
+            bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, bool showCategoryPrefixInCategoryPageTitles,
+            string navigationContent, MarkdownPipeline markdownPipeline)
         {
             var recursiveBack = currentDirectory.Length > 0 ?
                 string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
@@ -945,8 +947,14 @@ namespace StaticWiki
 
             finalText = finalText.Replace(tocTag, tocContent);
 
+            //Remove category prefix from page titles or replace it with a span to make the prefix targetable by CSS
+            var sanitizedPageTitleValue = pageTitle.StartsWith(categoryPrefix) ?
+                showCategoryPrefixInCategoryPageTitles ?
+                pageTitle.Replace(categoryPrefix, $"<span class=\"categoryPrefix\">{categoryPrefix}</span>") :
+                pageTitle.Replace(categoryPrefix, "") : pageTitle;
+
             HandleTitleTag(ref finalText, processedTitle);
-            HandlePageTitleTag(ref finalText, pageTitle);
+            HandlePageTitleTag(ref finalText, sanitizedPageTitleValue);
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
             HandleNavTags(ref finalText, navigationInfo, navigationContent, markdownPipeline);
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
@@ -1056,7 +1064,8 @@ namespace StaticWiki
         /// <returns>Whether we successfully processed the source into the destination</returns>
         public static bool ProcessDirectory(string sourceDirectory, string destinationDirectory, string defaultTheme,
             KeyValuePair<string, string>[] themes, string navigationFileName, string[] contentExtensions, string baseTitle,
-            bool disableAutoPageExtension, bool disableLinkCorrection, string[] markdownExtensions, ref string logMessage)
+            bool disableAutoPageExtension, bool disableLinkCorrection, string[] markdownExtensions,
+            bool showCategoryPrefixInCategoryPageTitles, ref string logMessage)
         {
             var fileCache = new Dictionary<string, FileInfo>();
             var files = new string[0];
@@ -1512,7 +1521,8 @@ namespace StaticWiki
                 var fileInfo = fileCache[baseName];
                 var processedText = ProcessFile(baseName, fileInfo.text, (string)themeText.Clone(), string.Format("{0}: {1}", baseTitle, fileInfo.pageTitle),
                     fileInfo.pageTitle, navigationInfo, searchNames.ToArray(), searchURLs.ToArray(), categoryInfo, sourceDirectory, directoryName,
-                    pageExtension, isCategoryPage || isCategoryList, disableAutoPageExtension, disableLinkCorrection, navigationContent, pipeline);
+                    pageExtension, isCategoryPage || isCategoryList, disableAutoPageExtension, disableLinkCorrection,
+                    showCategoryPrefixInCategoryPageTitles, navigationContent, pipeline);
 
                 try
                 {
@@ -1602,7 +1612,8 @@ namespace StaticWiki
         /// <returns>Whether we successfully parsed the staticwiki.ini file</returns>
         public static bool GetWorkspaceDetails(string workspaceDirectory, ref string sourceDirectory, ref string destinationDirectory, ref string defaultThemeName, ref KeyValuePair<string, string>[] themes,
             ref string titleName, ref string navigationFileName, ref string[] contentExtensions, ref bool disableAutoPageExtension,
-            ref bool disableLinkCorrection, ref string[] markdownExtensions, ref string logMessage)
+            ref bool disableLinkCorrection, ref string[] markdownExtensions, ref bool showCategoryPrefixInCategoryPageTitles,
+            ref string logMessage)
         {
             try
             {
@@ -1648,6 +1659,18 @@ namespace StaticWiki
                 else if(disableAutoPageExtensionString == "1")
                 {
                     disableAutoPageExtension = true;
+                }
+
+                var showCategoryPrefixInCategoryPageTitlesString =
+                    iniParser.GetValue(configurationShowCategoryPrefixInCategoryPagesTitles, configurationSectionName);
+
+                if (showCategoryPrefixInCategoryPageTitlesString == "0")
+                {
+                    showCategoryPrefixInCategoryPageTitles = false;
+                }
+                else if (showCategoryPrefixInCategoryPageTitlesString == "1")
+                {
+                    showCategoryPrefixInCategoryPageTitles = true;
                 }
 
                 var disableLinkCorrectionString = iniParser.GetValue(configurationDisableLinkCorrectionName, configurationSectionName);
