@@ -315,7 +315,7 @@ namespace StaticWiki
 
                 if (match.Groups.Count == 3)
                 {
-                    var categoryNames = match.Groups[1].Value.Split(' ');
+                    var categoryNames = match.Groups[1].Value.Split(',');
                     var categoryContent = match.Groups[2].Value;
 
                     if(categoryNames.Length == 0)
@@ -328,7 +328,7 @@ namespace StaticWiki
                     {
                         foreach(var name in categoryNames)
                         {
-                            if (pair.Key.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                            if (pair.Key.Equals(name.Trim(), StringComparison.InvariantCultureIgnoreCase))
                             {
                                 replaced = true;
                                 contentText = contentText.Replace(match.Groups[0].Value, categoryContent);
