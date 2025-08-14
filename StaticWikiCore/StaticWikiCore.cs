@@ -307,7 +307,7 @@ namespace StaticWiki
         /// <param name="categoriesInfo">The current categories of the page</param>
         private static void HandleCategoryContentTags(ref string contentText, List<KeyValuePair<string, string>> categoriesInfo)
         {
-            var categoryContentRegex = new Regex("(?sm)\\[categorycontent categories=(.*?)\\](.*?)\\[\\/categorycontent\\]", RegexOptions.Multiline);
+            var categoryContentRegex = new Regex("(?sm)\\[categorycontent categories=(.*?)?\\](.*?)\\[\\/categorycontent\\]", RegexOptions.Multiline);
 
             foreach(Match match in categoryContentRegex.Matches(contentText))
             {
@@ -318,7 +318,7 @@ namespace StaticWiki
                     var categoryNames = match.Groups[1].Value.Split(',');
                     var categoryContent = match.Groups[2].Value;
 
-                    if(categoryNames.Length == 0)
+                    if (match.Groups[1].Value.Length == 0 && categoriesInfo.Count == 0)
                     {
                         replaced = true;
                         contentText = contentText.Replace(match.Groups[0].Value, categoryContent);

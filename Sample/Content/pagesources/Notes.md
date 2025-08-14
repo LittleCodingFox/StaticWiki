@@ -92,7 +92,7 @@ So if you want to add custom content to a category page, you must create that fi
 
 You can also make text in the theme or page vary based on one or more categories using the `[categorycontent]` tag.
 
-It works in the form of `[categorycontent categories=a b c d]content goes here[/categorycontent]`. An empty category list makes it just add the content.
+It works in the form of `[categorycontent categories=a, b, c, d]content goes here[/categorycontent]`. An empty category list makes it add the content if the page has no categories.
 
 # Navigation
 
