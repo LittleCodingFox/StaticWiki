@@ -90,6 +90,10 @@ Additionally, you can create category pages in your sources (with their name in 
 Category pages are always created in the root directory of your wiki (the destination folder where your wiki is generated).
 So if you want to add custom content to a category page, you must create that file in the root directory.
 
+You can also make text in the theme or page vary based on one or more categories using the `[categorycontent]` tag.
+
+It works in the form of `[categorycontent categories=a b c d]content goes here[/categorycontent]`. An empty category list makes it just add the content.
+
 # Navigation
 
 Regular navigation can be done using a `Navigation.list` file at the workspace directory (the same directory that has your `staticwiki.ini` file), where each line corresponds to a name and a link, separated by a `=`. For example:

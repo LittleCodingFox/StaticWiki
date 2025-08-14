@@ -301,6 +301,57 @@ namespace StaticWiki
         }
 
         /// <summary>
+        /// Handles conditional category content tags in a page
+        /// </summary>
+        /// <param name="contentText">The text being processed</param>
+        /// <param name="categoriesInfo">The current categories of the page</param>
+        private static void HandleCategoryContentTags(ref string contentText, List<KeyValuePair<string, string>> categoriesInfo)
+        {
+            var categoryContentRegex = new Regex("(?sm)\\[categorycontent categories=(.*?)\\](.*?)\\[\\/categorycontent\\]", RegexOptions.Multiline);
+
+            foreach(Match match in categoryContentRegex.Matches(contentText))
+            {
+                var replaced = false;
+
+                if (match.Groups.Count == 3)
+                {
+                    var categoryNames = match.Groups[1].Value.Split(' ');
+                    var categoryContent = match.Groups[2].Value;
+
+                    if(categoryNames.Length == 0)
+                    {
+                        replaced = true;
+                        contentText = contentText.Replace(match.Groups[0].Value, categoryContent);
+                    }
+
+                    foreach (var pair in categoriesInfo)
+                    {
+                        foreach(var name in categoryNames)
+                        {
+                            if (pair.Key.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                replaced = true;
+                                contentText = contentText.Replace(match.Groups[0].Value, categoryContent);
+
+                                break;
+                            }
+                        }
+
+                        if(replaced)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if(replaced == false)
+                {
+                    contentText = contentText.Replace(match.Groups[0].Value, "");
+                }
+            }
+        }
+
+        /// <summary>
         /// Handles the tags for a category page
         /// </summary>
         /// <param name="finalText">Our current finalized text</param>
@@ -958,6 +1009,8 @@ namespace StaticWiki
             HandleSearchTags(ref finalText, searchNamesString, searchURLsString);
             HandleNavTags(ref finalText, navigationInfo, navigationContent, markdownPipeline);
             HandleCategoryTags(ref finalText, baseName, categoriesInfo, isCategories);
+            HandleCategoryContentTags(ref finalText, categoriesInfo);
+            HandleCategoryContentTags(ref contentText, categoriesInfo);
             HandleBasenameTag(ref finalText, baseName);
             HandleRootDirectoryTag(ref finalText, currentDirectory);
             HandleContentTag(ref finalText, contentText);
