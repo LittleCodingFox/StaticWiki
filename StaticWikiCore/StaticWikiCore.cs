@@ -1,4 +1,6 @@
 ﻿using Markdig;
+using Markdig.Extensions.AutoIdentifiers;
+using Markdown.ColorCode;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -58,8 +60,32 @@ namespace StaticWiki
         private const string configurationContentExtensionsName = "ContentExtensions";
         private const string configurationDisableAutoPageExtensionsName = "DisableAutoPageExtensions";
         private const string configurationDisableLinkCorrectionName = "DisableLinkCorrection";
-        private const string configurationMarkdownExtensionsName = "MarkdownExtensions";
         private const string configurationShowCategoryPrefixInCategoryPagesTitles = "ShowCategoryPrefixInCategoryPageTitles";
+        private const string configurationExtensionBoostrap = "UseBootstrap";
+        private const string configurationExtensionPipeTables = "UsePipeTables";
+        private const string configurationExtensionGridTables = "UseGridTables";
+        private const string configurationExtensionExtraEmphasis = "UseExtraEmphasis";
+        private const string configurationExtensionSpecialAttributes = "UseSpecialAttributes";
+        private const string configurationExtensionDefinitionLists = "UseDefinitionLists";
+        private const string configurationExtensionFootnotes = "UseFootnotes";
+        private const string configurationExtensionAutoIdentifiers = "UseAutoIdentifiers";
+        private const string configurationExtensionTaskLists = "UseTaskLists";
+        private const string configurationExtensionAutoLinks = "UseAutoLinks";
+        private const string configurationExtensionExtraBulletLists = "UseExtraBulletLists";
+        private const string configurationExtensionMediaSupport = "UseMediaSupport";
+        private const string configurationExtensionAbbreviations = "UseAbbreviations";
+        private const string configurationExtensionCitations = "UseCitations";
+        private const string configurationExtensionCustomContainers = "UseCustomContainers";
+        private const string configurationExtensionFigures = "UseFigures";
+        private const string configurationExtensionFooters = "UseFooters";
+        private const string configurationExtensionMathematics = "UseMathematics";
+        private const string configurationExtensionHardlineBreaks = "UseHardlineBreaks";
+        private const string configurationExtensionEmoji = "UseEmoji";
+        private const string configurationExtensionSmartyPants = "UseSmartyPants";
+        private const string configurationExtensionDiagrams = "UseDiagrams";
+        private const string configurationExtensionYAMLFrontmatter = "UseYAMLFrontmatter";
+        private const string configurationExtensionColorCode = "UseColorCode";
+
         #endregion
 
         /// <summary>
@@ -99,9 +125,9 @@ namespace StaticWiki
         /// <param name="markdownString">The string to strip</param>
         /// <param name="pipeline">The markdown pipeline to use</param>
         /// <returns>The stripped string</returns>
-        private static string MarkdownStrippedString(string markdownString, MarkdownPipeline pipeline)
+        private static string MarkdownStrippedString(string markdownString, Markdig.MarkdownPipeline pipeline)
         {
-            var outString = Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
+            var outString = Markdig.Markdown.ToHtml(markdownString.Replace("_", " "), pipeline).Replace("<p>", "").Replace("</p>", "");
 
             if(outString.Last() == '\n') //Remove the added newline if required
             {
@@ -208,7 +234,8 @@ namespace StaticWiki
         /// <param name="navigationInfo">The navigation details using a list of Key Value Pairs where the Key is the Name and the Value is the URL</param>
         /// <param name="navigationContent">The Markdown navigation content (if available) or an empty string</param>
         /// <param name="pipeline">The markdown pipeline we're using (if we're using Markdown navigation)</param>
-        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo, string navigationContent, MarkdownPipeline pipeline)
+        private static void HandleNavTags(ref string finalText, List<KeyValuePair<string, string>> navigationInfo, string navigationContent,
+            Markdig.MarkdownPipeline pipeline)
         {
             var beginNavIndex = -1;
             var endNavIndex = -1;
@@ -580,162 +607,179 @@ namespace StaticWiki
         private static void HandleTemplates(ref string contentText, Dictionary<string, string> themeTemplates, Dictionary<string, string> userTags)
         {
             var templateRegex = new Regex("(?sm)\\[template name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/template\\]", RegexOptions.Multiline);
+            var templateRegexAlt = new Regex("(?sm)\\[template name=\\&ldquo;(.*?)\\&rdquo;\\](.*?)\\[\\/template\\]", RegexOptions.Multiline);
             var templateTagRegex = new Regex("(?sm)\\[templatetag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templatetag\\]");
+            var templateTagRegexAlt = new Regex("(?sm)\\[templatetag name=\\&ldquo;(.*?)\\&rdquo;\\](.*?)\\[\\/templatetag\\]");
             var templateItemRegex = new Regex("(?sm)\\[templateitem\\](.*?)\\[\\/templateitem\\]", RegexOptions.Multiline);
             var templateItemTagRegex = new Regex("(?sm)\\[templateitemtag name=\\&quot;(.*?)\\&quot;\\](.*?)\\[\\/templateitemtag\\]");
+            var templateItemTagRegexAlt = new Regex("(?sm)\\[templateitemtag name=\\&ldquo;(.*?)\\&rdquo;\\](.*?)\\[\\/templateitemtag\\]");
             var themeTemplateTagRegex = new Regex("\\[templatetag\\](.*?)\\[\\/templatetag\\]");
             var themeTemplateItemTagRegex = new Regex("\\[templateitemtag\\](.*?)\\[\\/templateitemtag\\]");
-            var templateIndex = 0;
 
-            foreach (Match m in templateRegex.Matches(contentText))
+            void Handle(Regex templateRegex, Regex templateTagRegex, Regex themeTemplateTagRegex,
+                Regex templateItemRegex, Regex templateItemTagRegex, Regex themeTemplateItemTagRegex,
+                ref string contentText)
             {
-                if (m.Groups.Count == 3)
-                {
-                    var index = 0;
-                    var templateName = m.Groups[1].Value;
-                    var templateContent = m.Groups[2].Value;
+                var templateIndex = 0;
 
-                    if(!themeTemplates.ContainsKey(templateName))
+                foreach (Match m in templateRegex.Matches(contentText))
+                {
+                    if (m.Groups.Count == 3)
                     {
-                        contentText = contentText.Replace(m.Groups[0].Value, "");
+                        var index = 0;
+                        var templateName = m.Groups[1].Value;
+                        var templateContent = m.Groups[2].Value;
+
+                        if (!themeTemplates.ContainsKey(templateName))
+                        {
+                            contentText = contentText.Replace(m.Groups[0].Value, "");
+
+                            continue;
+                        }
+
+                        var templateText = themeTemplates[templateName];
+                        var templateTags = new Dictionary<string, string>();
+                        var templateItemIndex = 0;
+                        templateIndex++;
+
+                        foreach (Match templateTagMatch in templateTagRegex.Matches(templateContent))
+                        {
+                            if (templateTagMatch.Groups.Count == 3)
+                            {
+                                var name = templateTagMatch.Groups[1].Value;
+                                var value = templateTagMatch.Groups[2].Value;
+
+                                if (!templateTags.ContainsKey(name))
+                                {
+                                    templateTags.Add(name, value);
+                                }
+                            }
+
+                            templateContent = templateContent.Replace(templateTagMatch.Groups[0].Value, "");
+                        }
+
+                        var templateProcessedText = (string)templateText.Clone();
+
+                        foreach (Match themeTemplateTagMatch in themeTemplateTagRegex.Matches(templateProcessedText.ToString()))
+                        {
+                            if (themeTemplateTagMatch.Groups.Count == 2)
+                            {
+                                var tag = themeTemplateTagMatch.Groups[1].Value;
+
+                                if (templateTags.ContainsKey(tag))
+                                {
+                                    templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, templateTags[tag]);
+                                }
+                                else
+                                {
+                                    templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, "");
+                                }
+                            }
+                        }
+
+                        var itemProcessedText = "";
+
+                        Match themeTemplateItemMatch = templateItemRegex.Match(templateProcessedText.ToString());
+
+                        if (themeTemplateItemMatch != null)
+                        {
+                            if (themeTemplateItemMatch.Groups.Count == 2)
+                            {
+                                foreach (Match templateItemMatch in templateItemRegex.Matches(templateContent))
+                                {
+                                    if (templateItemMatch.Groups.Count == 2)
+                                    {
+                                        var templateItemTags = new Dictionary<string, string>();
+                                        var templateItemContent = templateItemMatch.Groups[1].Value;
+
+                                        foreach (Match templateItemTagMatch in templateItemTagRegex.Matches(templateItemContent))
+                                        {
+                                            if (templateItemTagMatch.Groups.Count == 3)
+                                            {
+                                                var name = templateItemTagMatch.Groups[1].Value;
+                                                var value = templateItemTagMatch.Groups[2].Value;
+
+                                                if (!templateItemTags.ContainsKey(name))
+                                                {
+                                                    templateItemTags.Add(name, value);
+                                                }
+                                            }
+
+                                            templateItemContent = templateItemContent.Replace(templateItemTagMatch.Groups[0].Value, "");
+                                        }
+
+                                        var itemText = themeTemplateItemMatch.Groups[1].Value;
+
+                                        foreach (Match themeTemplateItemTagMatch in themeTemplateTagRegex.Matches(itemText))
+                                        {
+                                            if (themeTemplateItemTagMatch.Groups.Count == 2)
+                                            {
+                                                var tag = themeTemplateItemTagMatch.Groups[1].Value;
+
+                                                if (templateTags.ContainsKey(tag))
+                                                {
+                                                    itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateTags[tag]);
+                                                }
+                                                else
+                                                {
+                                                    itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
+                                                }
+                                            }
+                                        }
+
+                                        foreach (Match themeTemplateItemTagMatch in themeTemplateItemTagRegex.Matches(itemText))
+                                        {
+                                            if (themeTemplateItemTagMatch.Groups.Count == 2)
+                                            {
+                                                var tag = themeTemplateItemTagMatch.Groups[1].Value;
+
+                                                if (templateItemTags.ContainsKey(tag))
+                                                {
+                                                    itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateItemTags[themeTemplateItemTagMatch.Groups[1].Value]);
+                                                }
+                                                else
+                                                {
+                                                    itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
+                                                }
+                                            }
+                                        }
+
+                                        itemText = itemText.Replace(templateItemIndexTag, templateItemIndex.ToString());
+                                        itemText = itemText.Replace(templateItemContentTag, templateItemContent);
+
+                                        templateItemIndex++;
+
+                                        itemProcessedText += itemText;
+                                    }
+                                }
+
+                                templateProcessedText = templateProcessedText.Replace(themeTemplateItemMatch.Groups[0].Value, itemProcessedText);
+                            }
+                        }
+
+                        templateProcessedText = templateProcessedText.Replace(templateIndexTag, templateIndex.ToString());
+
+                        index = contentText.IndexOf(m.Groups[0].Value);
+
+                        if (index != -1)
+                        {
+                            contentText = contentText.Substring(0, index) + templateProcessedText + contentText.Substring(index + m.Groups[0].Value.Length);
+                        }
 
                         continue;
                     }
 
-                    var templateText = themeTemplates[templateName];
-                    var templateTags = new Dictionary<string, string>();
-                    var templateItemIndex = 0;
-                    templateIndex++;
-
-                    foreach (Match templateTagMatch in templateTagRegex.Matches(templateContent))
-                    {
-                        if(templateTagMatch.Groups.Count == 3)
-                        {
-                            var name = templateTagMatch.Groups[1].Value;
-                            var value = templateTagMatch.Groups[2].Value;
-
-                            if(!templateTags.ContainsKey(name))
-                            {
-                                templateTags.Add(name, value);
-                            }
-                        }
-
-                        templateContent = templateContent.Replace(templateTagMatch.Groups[0].Value, "");
-                    }
-
-                    var templateProcessedText = (string)templateText.Clone();
-
-                    foreach (Match themeTemplateTagMatch in themeTemplateTagRegex.Matches(templateProcessedText.ToString()))
-                    {
-                        if (themeTemplateTagMatch.Groups.Count == 2)
-                        {
-                            var tag = themeTemplateTagMatch.Groups[1].Value;
-
-                            if (templateTags.ContainsKey(tag))
-                            {
-                                templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, templateTags[tag]);
-                            }
-                            else
-                            {
-                                templateProcessedText = templateProcessedText.Replace(themeTemplateTagMatch.Groups[0].Value, "");
-                            }
-                        }
-                    }
-
-                    var itemProcessedText = "";
-
-                    Match themeTemplateItemMatch = templateItemRegex.Match(templateProcessedText.ToString());
-
-                    if (themeTemplateItemMatch != null)
-                    {
-                        if (themeTemplateItemMatch.Groups.Count == 2)
-                        {
-                            foreach (Match templateItemMatch in templateItemRegex.Matches(templateContent))
-                            {
-                                if (templateItemMatch.Groups.Count == 2)
-                                {
-                                    var templateItemTags = new Dictionary<string, string>();
-                                    var templateItemContent = templateItemMatch.Groups[1].Value;
-
-                                    foreach (Match templateItemTagMatch in templateItemTagRegex.Matches(templateItemContent))
-                                    {
-                                        if (templateItemTagMatch.Groups.Count == 3)
-                                        {
-                                            var name = templateItemTagMatch.Groups[1].Value;
-                                            var value = templateItemTagMatch.Groups[2].Value;
-
-                                            if (!templateItemTags.ContainsKey(name))
-                                            {
-                                                templateItemTags.Add(name, value);
-                                            }
-                                        }
-
-                                        templateItemContent = templateItemContent.Replace(templateItemTagMatch.Groups[0].Value, "");
-                                    }
-
-                                    var itemText = themeTemplateItemMatch.Groups[1].Value;
-
-                                    foreach (Match themeTemplateItemTagMatch in themeTemplateTagRegex.Matches(itemText))
-                                    {
-                                        if (themeTemplateItemTagMatch.Groups.Count == 2)
-                                        {
-                                            var tag = themeTemplateItemTagMatch.Groups[1].Value;
-
-                                            if (templateTags.ContainsKey(tag))
-                                            {
-                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateTags[tag]);
-                                            }
-                                            else
-                                            {
-                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
-                                            }
-                                        }
-                                    }
-
-                                    foreach (Match themeTemplateItemTagMatch in themeTemplateItemTagRegex.Matches(itemText))
-                                    {
-                                        if (themeTemplateItemTagMatch.Groups.Count == 2)
-                                        {
-                                            var tag = themeTemplateItemTagMatch.Groups[1].Value;
-
-                                            if (templateItemTags.ContainsKey(tag))
-                                            {
-                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, templateItemTags[themeTemplateItemTagMatch.Groups[1].Value]);
-                                            }
-                                            else
-                                            {
-                                                itemText = itemText.Replace(themeTemplateItemTagMatch.Groups[0].Value, "");
-                                            }
-                                        }
-                                    }
-
-                                    itemText = itemText.Replace(templateItemIndexTag, templateItemIndex.ToString());
-                                    itemText = itemText.Replace(templateItemContentTag, templateItemContent);
-
-                                    templateItemIndex++;
-
-                                    itemProcessedText += itemText;
-                                }
-                            }
-
-                            templateProcessedText = templateProcessedText.Replace(themeTemplateItemMatch.Groups[0].Value, itemProcessedText);
-                        }
-                    }
-
-                    templateProcessedText = templateProcessedText.Replace(templateIndexTag, templateIndex.ToString());
-
-                    index = contentText.IndexOf(m.Groups[0].Value);
-
-                    if(index != -1)
-                    {
-                        contentText = contentText.Substring(0, index) + templateProcessedText + contentText.Substring(index + m.Groups[0].Value.Length);
-                    }
-
-                    continue;
+                    contentText = contentText.Replace(m.Groups[0].Value, "");
                 }
-
-                contentText = contentText.Replace(m.Groups[0].Value, "");
             }
+
+            Handle(templateRegex, templateTagRegex, themeTemplateTagRegex,
+                templateItemRegex, templateItemTagRegex, themeTemplateItemTagRegex,
+                ref contentText);
+
+            Handle(templateRegexAlt, templateTagRegexAlt, themeTemplateTagRegex,
+                templateItemRegex, templateItemTagRegexAlt, themeTemplateItemTagRegex,
+                ref contentText);
         }
 
         /// <summary>
@@ -965,13 +1009,13 @@ namespace StaticWiki
         public static string ProcessFile(string baseName, string sourceText, string themeText, string title, string pageTitle, List<KeyValuePair<string, string>> navigationInfo,
             string[] searchNames, string[] searchURLs, List<KeyValuePair<string, string>> categoriesInfo, string sourceDirectory, string currentDirectory, string pageExtension,
             bool isCategories, bool disableAutoPageExtension, bool disableLinkCorrection, bool showCategoryPrefixInCategoryPageTitles,
-            string navigationContent, MarkdownPipeline markdownPipeline)
+            string navigationContent, Markdig.MarkdownPipeline markdownPipeline)
         {
             var recursiveBack = currentDirectory.Length > 0 ?
                 string.Join("", currentDirectory.Replace("\\", "/").Split("/".ToCharArray()).Select(x => "../")) : "";
             var searchNamesString = string.Join(",", searchNames.Select(x => string.Format("\"{0}\"", MarkdownStrippedString(x, markdownPipeline).Replace("\n", ""))).ToArray());
             var searchURLsString = string.Join(",", searchURLs.Select(x => string.Format("\"{0}{1}{2}\"", recursiveBack, x, pageExtension)).ToArray());
-            var contentText = Markdown.ToHtml(sourceText, markdownPipeline);
+            var contentText = Markdig.Markdown.ToHtml(sourceText, markdownPipeline);
             var processedTitle = MarkdownStrippedString(title, markdownPipeline);
             var userTags = new Dictionary<string, string>();
             var themeTemplates = new Dictionary<string, string>();
@@ -980,7 +1024,7 @@ namespace StaticWiki
 
             if(navigationContent.Length > 0)
             {
-                navigationContent = Markdown.ToHtml(navigationContent, markdownPipeline);
+                navigationContent = Markdig.Markdown.ToHtml(navigationContent, markdownPipeline);
             }
 
             GatherTemplates(ref finalText, themeTemplates);
@@ -1222,133 +1266,204 @@ namespace StaticWiki
                 logMessage += string.Format("Failed to read navigation info from '{0}'\n", navigationFileName);
             }
 
-            var pipelineBuilder = new MarkdownPipelineBuilder();
-            var upperExtensions = markdownExtensions.Select(x => x.ToUpper()).ToList();
+            var pipelineBuilder = new Markdig.MarkdownPipelineBuilder();
             var usedExtensions = new List<string>();
 
-            foreach(var extension in upperExtensions)
+            foreach(var extension in markdownExtensions)
             {
-                if(extension == "Bootstrap".ToUpper())
+                switch(extension)
                 {
-                    usedExtensions.Add("Bootstrap");
-                    pipelineBuilder = pipelineBuilder.UseBootstrap();
-                }
-                else if(extension == "Pipe Tables".ToUpper())
-                {
-                    usedExtensions.Add("Pipe Tables");
-                    pipelineBuilder = pipelineBuilder.UsePipeTables();
-                }
-                else if(extension == "Grid Tables".ToUpper())
-                {
-                    usedExtensions.Add("Grid Tables");
-                    pipelineBuilder = pipelineBuilder.UseGridTables();
-                }
-                else if(extension == "Extra Emphasis".ToUpper())
-                {
-                    usedExtensions.Add("Extra Emphasis");
-                    pipelineBuilder = pipelineBuilder.UseEmphasisExtras();
-                }
-                else if(extension == "Special Attributes".ToUpper())
-                {
-                    usedExtensions.Add("Special Attributes");
-                    pipelineBuilder = pipelineBuilder.UseGenericAttributes();
-                }
-                else if (extension == "Definition Lists".ToUpper())
-                {
-                    usedExtensions.Add("Definition Lists");
-                    pipelineBuilder = pipelineBuilder.UseDefinitionLists();
-                }
-                else if (extension == "Footnotes".ToUpper())
-                {
-                    usedExtensions.Add("Footnotes");
-                    pipelineBuilder = pipelineBuilder.UseFootnotes();
-                }
-                else if (extension == "Auto Identifiers".ToUpper())
-                {
-                    Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions options = 
-                        Markdig.Extensions.AutoIdentifiers.AutoIdentifierOptions.AllowOnlyAscii;
+                    case string s when s == configurationExtensionAbbreviations:
 
-                    usedExtensions.Add("Auto Identifiers");
-                    pipelineBuilder = pipelineBuilder.UseAutoIdentifiers(options);
-                }
-                else if (extension == "Auto Links".ToUpper())
-                {
-                    usedExtensions.Add("Auto Links");
-                    pipelineBuilder = pipelineBuilder.UseAutoLinks();
-                }
-                else if (extension == "Task Lists".ToUpper())
-                {
-                    usedExtensions.Add("Task Lists");
-                    pipelineBuilder = pipelineBuilder.UseTaskLists();
-                }
-                else if (extension == "Extra Bullet Lists".ToUpper())
-                {
-                    usedExtensions.Add("Extra Bullet Lists");
-                    pipelineBuilder = pipelineBuilder.UseListExtras();
-                }
-                else if (extension == "Media Support".ToUpper())
-                {
-                    usedExtensions.Add("Media Support");
-                    pipelineBuilder = pipelineBuilder.UseMediaLinks();
-                }
-                else if (extension == "Abbreviations".ToUpper())
-                {
-                    usedExtensions.Add("Abbreviations");
-                    pipelineBuilder = pipelineBuilder.UseAbbreviations();
-                }
-                else if (extension == "Citations".ToUpper())
-                {
-                    usedExtensions.Add("Citations");
-                    pipelineBuilder = pipelineBuilder.UseCitations();
-                }
-                else if (extension == "Custom Containers".ToUpper())
-                {
-                    usedExtensions.Add("Custom Containers");
-                    pipelineBuilder = pipelineBuilder.UseCustomContainers();
-                }
-                else if (extension == "Figures".ToUpper())
-                {
-                    usedExtensions.Add("Figures");
-                    pipelineBuilder = pipelineBuilder.UseFigures();
-                }
-                else if (extension == "Footers".ToUpper())
-                {
-                    usedExtensions.Add("Footers");
-                    pipelineBuilder = pipelineBuilder.UseFooters();
-                }
-                else if (extension == "Mathematics".ToUpper())
-                {
-                    usedExtensions.Add("Mathematics");
-                    pipelineBuilder = pipelineBuilder.UseMathematics();
-                }
-                else if (extension == "Hardline Breaks".ToUpper())
-                {
-                    usedExtensions.Add("Hardline Breaks");
-                    pipelineBuilder = pipelineBuilder.UseSoftlineBreakAsHardlineBreak();
-                }
-                else if (extension == "Emoji".ToUpper())
-                {
-                    usedExtensions.Add("Emoji");
-                    pipelineBuilder = pipelineBuilder.UseEmojiAndSmiley();
-                }
-                else if (extension == "Smarty Pants".ToUpper())
-                {
-                    usedExtensions.Add("Smarty Pants");
-                    pipelineBuilder = pipelineBuilder.UseSmartyPants();
-                }
-                else if (extension == "Diagrams".ToUpper())
-                {
-                    usedExtensions.Add("Diagrams");
-                    pipelineBuilder = pipelineBuilder.UseDiagrams();
-                }
-                else if (extension == "YAML Frontmatter".ToUpper())
-                {
-                    usedExtensions.Add("YAML Frontmatter");
-                    pipelineBuilder = pipelineBuilder.UseYamlFrontMatter();
-                }
-                else
-                {
-                    logMessage += string.Format("Unable to use unknown extension '{0}'\n", markdownExtensions[upperExtensions.IndexOf(extension)]);
+                        usedExtensions.Add("Abbreviations");
+
+                        pipelineBuilder = pipelineBuilder.UseAbbreviations();
+
+                        break;
+
+                    case string s when s == configurationExtensionAutoIdentifiers:
+
+                        usedExtensions.Add("Auto Identifiers");
+
+                        pipelineBuilder = pipelineBuilder.UseAutoIdentifiers(AutoIdentifierOptions.AllowOnlyAscii);
+
+                        break;
+
+                    case string s when s == configurationExtensionAutoLinks:
+
+                        usedExtensions.Add("Auto Links");
+
+                        pipelineBuilder = pipelineBuilder.UseAutoLinks();
+
+                        break;
+
+                    case string s when s == configurationExtensionBoostrap:
+
+                        usedExtensions.Add("Bootstrap");
+
+                        pipelineBuilder = pipelineBuilder.UseBootstrap();
+
+                        break;
+
+                    case string s when s == configurationExtensionCitations:
+
+                        usedExtensions.Add("Citations");
+
+                        pipelineBuilder = pipelineBuilder.UseCitations();
+
+                        break;
+
+                    case string s when s == configurationExtensionColorCode:
+
+                        usedExtensions.Add("Color Code");
+
+                        pipelineBuilder = pipelineBuilder.UseColorCode();
+
+                        break;
+
+                    case string s when s == configurationExtensionCustomContainers:
+
+                        usedExtensions.Add("Custom Containers");
+
+                        pipelineBuilder = pipelineBuilder.UseCustomContainers();
+
+                        break;
+
+                    case string s when s == configurationExtensionDefinitionLists:
+
+                        usedExtensions.Add("Definition Lists");
+
+                        pipelineBuilder = pipelineBuilder.UseDefinitionLists();
+
+                        break;
+
+                    case string s when s == configurationExtensionDiagrams:
+
+                        usedExtensions.Add("Diagrams");
+
+                        pipelineBuilder = pipelineBuilder.UseDiagrams();
+
+                        break;
+
+                    case string s when s == configurationExtensionEmoji:
+
+                        usedExtensions.Add("Emoji");
+
+                        pipelineBuilder = pipelineBuilder.UseEmojiAndSmiley();
+
+                        break;
+
+                    case string s when s == configurationExtensionExtraBulletLists:
+
+                        usedExtensions.Add("Extra Bullet Lists");
+
+                        pipelineBuilder = pipelineBuilder.UseListExtras();
+
+                        break;
+
+                    case string s when s == configurationExtensionExtraEmphasis:
+
+                        usedExtensions.Add("Extra Emphasis");
+
+                        pipelineBuilder = pipelineBuilder.UseEmphasisExtras();
+
+                        break;
+
+                    case string s when s == configurationExtensionFigures:
+
+                        usedExtensions.Add("Figures");
+
+                        pipelineBuilder = pipelineBuilder.UseFigures();
+
+                        break;
+
+                    case string s when s == configurationExtensionFooters:
+
+                        usedExtensions.Add("Footers");
+
+                        pipelineBuilder = pipelineBuilder.UseFooters();
+
+                        break;
+
+                    case string s when s == configurationExtensionFootnotes:
+
+                        usedExtensions.Add("Footnotes");
+
+                        pipelineBuilder = pipelineBuilder.UseFootnotes();
+
+                        break;
+
+                    case string s when s == configurationExtensionGridTables:
+
+                        usedExtensions.Add("Grid Tables");
+
+                        pipelineBuilder = pipelineBuilder.UseGridTables();
+
+                        break;
+
+                    case string s when s == configurationExtensionHardlineBreaks:
+
+                        usedExtensions.Add("Hardline Breaks");
+
+                        pipelineBuilder = pipelineBuilder.UseSoftlineBreakAsHardlineBreak();
+
+                        break;
+
+                    case string s when s == configurationExtensionMathematics:
+
+                        usedExtensions.Add("Mathematics");
+
+                        pipelineBuilder = pipelineBuilder.UseMathematics();
+
+                        break;
+
+                    case string s when s == configurationExtensionMediaSupport:
+
+                        usedExtensions.Add("Media Support");
+
+                        pipelineBuilder = pipelineBuilder.UseMediaLinks();
+
+                        break;
+
+                    case string s when s == configurationExtensionPipeTables:
+
+                        usedExtensions.Add("Pipe Tables");
+
+                        pipelineBuilder = pipelineBuilder.UsePipeTables();
+
+                        break;
+
+                    case string s when s == configurationExtensionSmartyPants:
+
+                        usedExtensions.Add("Smarty Pants");
+
+                        pipelineBuilder = pipelineBuilder.UseSmartyPants();
+
+                        break;
+
+                    case string s when s == configurationExtensionSpecialAttributes:
+
+                        usedExtensions.Add("Special Attributes");
+
+                        pipelineBuilder = pipelineBuilder.UseGenericAttributes();
+
+                        break;
+
+                    case string s when s == configurationExtensionTaskLists:
+
+                        usedExtensions.Add("Task Lists");
+
+                        pipelineBuilder = pipelineBuilder.UseTaskLists();
+
+                        break;
+
+                    case string s when s == configurationExtensionYAMLFrontmatter:
+
+                        usedExtensions.Add("YAML Frontmatter");
+
+                        pipelineBuilder = pipelineBuilder.UseYamlFrontMatter();
+
+                        break;
                 }
             }
 
@@ -1737,11 +1852,52 @@ namespace StaticWiki
                     disableLinkCorrection = true;
                 }
 
-                markdownExtensions = iniParser.GetValue(configurationMarkdownExtensionsName, configurationSectionName)
-                    .Split(",".ToCharArray())
-                    .Select(x => x.Trim())
-                    .Where(x => x.Length > 0)
-                    .ToArray();
+                var extensions = new List<string>();
+
+                void AddExtension(string name)
+                {
+                    var value = iniParser.GetValue(name, configurationSectionName);
+
+                    if (value == "1")
+                    {
+                        extensions.Add(name);
+                    }
+                }
+
+                string[] configurationNames =
+                    [
+                        configurationExtensionBoostrap,
+                        configurationExtensionPipeTables,
+                        configurationExtensionGridTables,
+                        configurationExtensionExtraEmphasis,
+                        configurationExtensionSpecialAttributes,
+                        configurationExtensionDefinitionLists,
+                        configurationExtensionFootnotes,
+                        configurationExtensionAutoIdentifiers,
+                        configurationExtensionTaskLists,
+                        configurationExtensionAutoLinks,
+                        configurationExtensionExtraBulletLists,
+                        configurationExtensionMediaSupport,
+                        configurationExtensionAbbreviations,
+                        configurationExtensionCitations,
+                        configurationExtensionCustomContainers,
+                        configurationExtensionFigures,
+                        configurationExtensionFooters,
+                        configurationExtensionMathematics,
+                        configurationExtensionHardlineBreaks,
+                        configurationExtensionEmoji,
+                        configurationExtensionSmartyPants,
+                        configurationExtensionDiagrams,
+                        configurationExtensionYAMLFrontmatter,
+                        configurationExtensionColorCode,
+                    ];
+
+                foreach(var name in configurationNames)
+                {
+                    AddExtension(name);
+                }
+
+                markdownExtensions = extensions.ToArray();
             }
             catch (Exception exception)
             {

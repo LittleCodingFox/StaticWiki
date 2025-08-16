@@ -135,41 +135,13 @@ Or:
 
 # Markdown Extensions
 
-You can use several [Markdig](https://github.com/lunet-io/markdig) extensions by using the `Extensions` field in `staticwiki.ini`.
-Extensions are separated by a comma and can have spaces. So if you want to use the `Bootstrap` and `Pipe Tables` extensions, you'd add this:
+You can use several [Markdig](https://github.com/xoofx/markdig) extensions by using the `Use(name)` fields in `staticwiki.ini`.
 
-```
-MarkdownExtensions=Bootstrap, Pipe Tables
-```
+Used extensions should have a value of 1 to be used.
 
-These are the available extensions:
+You can find more details on this in the [Markdig](https://github.com/xoofx/markdig) page.
 
-- `Bootstrap`
-- `Pipe Tables`
-- `Grid Tables`
-- `Grid Tables`
-- `Extra Emphasis`
-- `Special Attributes`
-- `Definition Lists`
-- `Footnotes`
-- `Auto Identifiers`
-- `Auto Links`
-- `Task Lists`
-- `Extra Bullet Lists`
-- `Media Support`
-- `Abbreviations`
-- `Citations`
-- `Custom Containers`
-- `Figures`
-- `Footers`
-- `Mathematics`
-- `Hardline Breaks`
-- `Emoji`
-- `Smarty Pants`
-- `Diagrams`
-- `YAML Frontmatter`
-
-You can find more details on this in the [Markdig](https://github.com/lunet-io/markdig) page.
+Color Code syntax highlighting information can be found at https://wbaldoumas.github.io/markdown-colorcode/
 
 # Templates
 
