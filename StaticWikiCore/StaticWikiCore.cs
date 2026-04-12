@@ -96,27 +96,27 @@ namespace StaticWiki
             /// <summary>
             /// The page's title
             /// </summary>
-            public string pageTitle;
+            public string? pageTitle;
 
             /// <summary>
             /// The name of this page
             /// </summary>
-            public string baseName;
+            public string? baseName;
 
             /// <summary>
             /// The name of this page formatted into a file name
             /// </summary>
-            public string saneBaseName;
+            public string? saneBaseName;
 
             /// <summary>
             /// The text of this page
             /// </summary>
-            public string text;
+            public string? text;
 
             /// <summary>
             /// The theme for this page
             /// </summary>
-            public string theme;
+            public string? theme;
         }
 
         /// <summary>

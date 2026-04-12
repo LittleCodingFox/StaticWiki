@@ -20,8 +20,7 @@
 				   VerticalAlignment="Center">Project Loaded</Label>
 
 			<CheckBox x:Name="autoUpdateCheckbox"
-					  Checked="EnableAutoUpdates"
-					  Unchecked="DisableAutoUpdates"
+					  IsCheckedChanged="CheckAutoUpdates"
 					  Margin="10, 15"
 					  Width="150"
 					  IsChecked="True">Enable auto updates</CheckBox>

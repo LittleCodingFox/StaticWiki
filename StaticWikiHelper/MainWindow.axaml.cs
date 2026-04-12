@@ -14,7 +14,7 @@ namespace StaticWikiHelper
 {
     public partial class MainWindow : Window
     {
-        private FileSystemWatcher fileSystemWatcher = null;
+        private FileSystemWatcher? fileSystemWatcher = null;
 
         private string sourceDirectory = "";
         private string destinationDirectory = "";
@@ -31,7 +31,7 @@ namespace StaticWikiHelper
         private bool autoUpdatesEnabled = true;
         private bool forceUpdate = false;
 
-        private Thread workThread;
+        private readonly Thread workThread;
         private bool shouldTerminateWorkThread = false;
         private bool shouldUpdate = false;
 
@@ -184,11 +184,14 @@ namespace StaticWikiHelper
                 return;
             }
 
-            fileSystemWatcher = new FileSystemWatcher();
-            fileSystemWatcher.Path = sourceDirectory;
-            fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime;
-            fileSystemWatcher.Filter = "*.md";
-            fileSystemWatcher.IncludeSubdirectories = true;
+            fileSystemWatcher = new FileSystemWatcher
+            {
+                Path = sourceDirectory,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime,
+                Filter = "*.md",
+                IncludeSubdirectories = true,
+            };
+
             fileSystemWatcher.Created += new FileSystemEventHandler(OnChanged);
             fileSystemWatcher.Deleted += new FileSystemEventHandler(OnChanged);
             fileSystemWatcher.Changed += new FileSystemEventHandler(OnChanged);
@@ -213,19 +216,14 @@ namespace StaticWikiHelper
             }
         }
 
-        private void EnableAutoUpdates(object? sender, RoutedEventArgs args)
+        private void CheckAutoUpdates(object? sender, RoutedEventArgs args)
         {
-            lock (this)
+            lock(this)
             {
-                autoUpdatesEnabled = true;
-            }
-        }
-
-        private void DisableAutoUpdates(object? sender, RoutedEventArgs args)
-        {
-            lock (this)
-            {
-                autoUpdatesEnabled = false;
+                if(autoUpdateCheckbox != null)
+                {
+                    autoUpdatesEnabled = autoUpdateCheckbox.IsChecked ?? false;
+                }
             }
         }
 
