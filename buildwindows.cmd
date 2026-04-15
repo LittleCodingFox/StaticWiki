@@ -11,3 +11,7 @@ del build\*.pdb
 mkdir build\Sample
 
 robocopy Sample build\Sample /E /NFL /NDL /NJH /NJS /NP /NS /NC
+
+if ErrorLevel 8 exit /B 1
+
+exit /B 0
