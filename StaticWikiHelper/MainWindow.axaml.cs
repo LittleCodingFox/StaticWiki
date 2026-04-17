@@ -130,7 +130,7 @@ namespace StaticWikiHelper
             base.OnClosing(e);
         }
 
-        private void OpenProject(object? sender, RoutedEventArgs args)
+        private async void OpenProject(object? sender, RoutedEventArgs args)
         {
             if (fileSystemWatcher != null)
             {
@@ -154,20 +154,18 @@ namespace StaticWikiHelper
                 throw new NullReferenceException("Missing StorageProvider instance.");
             }
 
-            var task = provider.OpenFolderPickerAsync(new()
+            var selection = await provider.OpenFolderPickerAsync(new()
             {
                 Title = "Open Project Folder",
                 AllowMultiple = false,
             });
 
-            Task.WaitAny(task);
-
-            if (task.Result.Count == 0)
+            if (selection.Count == 0)
             {
                 return;
             }
 
-            var folder = task.Result[0];
+            var folder = selection[0];
 
             var basePath = Uri.UnescapeDataString(folder.Path.AbsolutePath);
 
