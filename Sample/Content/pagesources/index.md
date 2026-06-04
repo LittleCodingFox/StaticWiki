@@ -30,5 +30,4 @@ MIT
 # Contact
 
 [littlecodingfox.com](http://www.littlecodingfox.com) &nbsp;&middot;&nbsp;
-GitHub [@LittleCodingFox](https://github.com/LittleCodingFox) &nbsp;&middot;&nbsp;
-Twitter [@LittleCodingFox](https://twitter.com/LittleCodingFox)
+GitHub [@LittleCodingFox](https://github.com/LittleCodingFox)

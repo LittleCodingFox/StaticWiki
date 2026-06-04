@@ -1,3 +1,7 @@
+## 1.0.0 pre6
+
+- Fix UI bugs that affected all platforms
+
 ## 1.0.0 pre5
 
 - Added support for disabling page extensions

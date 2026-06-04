@@ -98,7 +98,7 @@ It works in the form of `[categorycontent categories=a, b, c, d]content goes her
 
 Regular navigation can be done using a `Navigation.list` file at the workspace directory (the same directory that has your `staticwiki.ini` file), where each line corresponds to a name and a link, separated by a `=`. For example:
 
-```
+```ini
 Google=http://www.google.com
 ```
 
@@ -111,25 +111,25 @@ Essentially, you can add HTML to your Markdown, separate from the Markdown itsel
 
 So, for instance, you can do:
 
-```
+```html
 <strong><a href="http://www.google.com">Google</a></strong>
 ```
 
 But not:
 
-```
+```markdown
 <strong>[Google](http://www.google.com)</strong>
 ```
 
 For adding an image in a custom way, such as a custom size, you can do simple HTML like:
 
-```
+```html
 <img src="my image.png" width="my width" height="my height">
 ```
 
 Or:
 
-```
+```html
 <img src="my image.png" style="border:1; width:my width; height: my height">
 ```
 
@@ -167,7 +167,7 @@ You can make a table of contents section for a page by adding a `[toc]contents[/
 
 To use themes, you must specify the themes in the `staticwiki.ini` file. You must specify the default theme name as well as a list of names and paths.
 
-```
+```ini
 DefaultThemeName=Default
 Themes=Default:staticwikitheme/theme.html
 ```
@@ -178,25 +178,27 @@ To override a specific theme in a page, you can use the `[theme]theme name[/them
 
 Special sections in themes are:
 
-- `{TITLE}` - should be placed on the &lt;title&gt; tag
-- `{CONTENT}` - should be placed where you want the page content to show
-- `{SEARCHNAMES}` - A list of javascript strings containing the page names
-- `{SEARCHADDRESSES}` - A list of javascript strings containing the page addresses
-- `{BEGINNAV}` - Begins a code snippet for navigation
-- `{ENDNAV}` - Ends a code snippet for navigation
-- `{NAVNAME}` - The name of the navigation item
-- `{NAVLINK}` - The link of the navigation item
-- `{ROOT}` - Root folder indicator for theme files
-- `{BEGINPAGECATEGORIES}` - Begins a code snippet for inserting a page's categories
-- `{ENDPAGECATEGORIES}` - Ends a code snippet for a page's categories
-- `{BEGINCATEGORYLIST}` - Begins the list of a category page's contents
-- `{ENDCATEGORYLIST}` - Ends the list of a category page's contents
-- `{CATEGORYNAME}`- The name of a category
-- `{CATEGORYLINK}` - The link to a category
-- `{BEGINIFCATEGORIES}` - Begins a code snippet if the page has categories
-- `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
-- `{BASENAME}` - The name of the current file
-- `{PAGETITLE}` - The title of the current file
-- `{TEMPLATEINDEX}` - The index of a template in a page.
-- `{TEMPLATEITEMINDEX}` - The index of a template item inside a template.
-- `{TEMPLATEITEMCONTENT}` - The content of a template item is put here.
+| Name                    | Description                                                                                               |
+| ------------------------|-----------------------------------------------------------------------------------------------------------|
+| `{TITLE}`               | Should be placed on the &lt;title&gt; tag                                                                 |
+| `{CONTENT}`             | Should be placed where you want the page content to show                                                  |
+| `{SEARCHNAMES}`         | A list of javascript strings containing the page names                                                    |
+| `{SEARCHADDRESSES}`     | A list of javascript strings containing the page addresses                                                |
+| `{BEGINNAV}`            | Begins a navigation item code snippet (used unless you use an specific navigation content)                |
+| `{ENDNAV}`              | Ends the navigation item code snippet                                                                     |
+| `{NAVNAME}`             | The name of the navigation item                                                                           |
+| `{NAVLINK}`             | The link of the navigation item                                                                           |
+| `{ROOT}`                | relative path to the root of the wiki. Used for sub-folders to properly link to resources and other pages |
+| `{BEGINPAGECATEGORIES}` | Begins a code snippet for inserting a page's categories                                                   |
+| `{ENDPAGECATEGORIES}`   | Ends a code snippet for a page's categories                                                               |
+| `{BEGINCATEGORYLIST}`   | Begins the list of a category page's contents                                                             |
+| `{ENDCATEGORYLIST}`     | Ends the list of a category page's contents                                                               |
+| `{CATEGORYNAME}`        | The name of a category                                                                                    |
+| `{CATEGORYLINK}`        | The link to a category                                                                                    |
+| `{BEGINIFCATEGORIES}`   | Begins a code snippet if the page has categories                                                          |
+| `{ENDIFCATEGORIES}`     | Ends a code snippet if the page has categories                                                            |
+| `{BASENAME}`            | The name of the current file                                                                              |
+| `{PAGETITLE}`           | The title of the current file                                                                             |
+| `{TEMPLATEINDEX}`       | The index of a template in a page.                                                                        |
+| `{TEMPLATEITEMINDEX}`   | The index of a template item inside a template.                                                           |
+| `{TEMPLATEITEMCONTENT}` | The content of a template item is put here.                                                               |
