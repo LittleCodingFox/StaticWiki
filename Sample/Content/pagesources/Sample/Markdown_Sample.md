@@ -6,7 +6,7 @@ Here are some samples of Markdown syntax you can look into from the source files
 
 # Headers
 
-```
+```markdown
 # H1
 ## H2
 ### H3
@@ -38,7 +38,7 @@ Alt-H2
 ------
 # Emphasis
 
-```
+```markdown
 Emphasis, aka italics, with *asterisks* or _underscores_.
 
 Strong emphasis, aka bold, with **asterisks** or __underscores__.
@@ -56,7 +56,7 @@ Combined emphasis with **asterisks and _underscores_**.
 Strikethrough uses two tildes. ~~Scratch this.~~
 # Lists
 
-```
+```markdown
 1. First ordered list item
 2. Another item
   * Unordered sub-list. 
@@ -93,7 +93,7 @@ Strikethrough uses two tildes. ~~Scratch this.~~
 
 # Links
 
-```
+```markdown
 [I'm an inline-style link](https://www.google.com)
 
 [I'm an inline-style link with title](https://www.google.com "Google's Homepage")
@@ -141,7 +141,7 @@ Some text to show that the reference links can follow later.
 
 # Images
 
-```
+```markdown
 Inline-style
 
 ![alt text](cat.jpg "Cat") 
@@ -165,7 +165,7 @@ Reference-style
 
 # Tables (Extension)
 
-```
+```markdown
 Colons can be used to align columns.
 
 | Tables        | Are           | Cool  |
@@ -203,7 +203,7 @@ Markdown | Less | Pretty
 
 # Quotes
 
-```
+```markdown
 > Blockquotes are very handy in email to emulate reply text.
 > This line is part of the same quote.
 
@@ -221,7 +221,7 @@ Quote break.
 
 # Inline HTML
 
-```
+```markdown
 <dl>
   <dt>Definition list</dt>
   <dd>Is something people use sometimes.</dd>
@@ -241,7 +241,7 @@ Quote break.
 
 # Horizontal Rule
 
-```
+```markdown
 Three or more...
 
 ---
@@ -273,7 +273,7 @@ Underscores
 
 # Line Breaks
 
-```
+```markdown
 Here's a line for us to start with.
 
 This line is separated from the one above by two newlines, so it will be a *separate paragraph*.
