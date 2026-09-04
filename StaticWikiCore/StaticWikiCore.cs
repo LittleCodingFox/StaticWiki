@@ -85,6 +85,7 @@ namespace StaticWiki
         private const string configurationExtensionDiagrams = "UseDiagrams";
         private const string configurationExtensionYAMLFrontmatter = "UseYAMLFrontmatter";
         private const string configurationExtensionColorCode = "UseColorCode";
+        private const string configurationExtensionAlertBlocks = "UseAlertBlocks";
 
         #endregion
 
@@ -1285,7 +1286,7 @@ namespace StaticWiki
 
                         usedExtensions.Add("Auto Identifiers");
 
-                        pipelineBuilder = pipelineBuilder.UseAutoIdentifiers(AutoIdentifierOptions.AllowOnlyAscii);
+                        pipelineBuilder = pipelineBuilder.UseAutoIdentifiers();
 
                         break;
 
@@ -1462,6 +1463,14 @@ namespace StaticWiki
                         usedExtensions.Add("YAML Frontmatter");
 
                         pipelineBuilder = pipelineBuilder.UseYamlFrontMatter();
+
+                        break;
+
+                    case string s when s == configurationExtensionAlertBlocks:
+
+                        usedExtensions.Add("Alert Blocks");
+
+                        pipelineBuilder = pipelineBuilder.UseAlertBlocks();
 
                         break;
                 }
@@ -1890,6 +1899,7 @@ namespace StaticWiki
                         configurationExtensionDiagrams,
                         configurationExtensionYAMLFrontmatter,
                         configurationExtensionColorCode,
+                        configurationExtensionAlertBlocks,
                     ];
 
                 foreach(var name in configurationNames)
