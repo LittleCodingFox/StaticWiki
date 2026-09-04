@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Markdig" Version="1.3.2" />
-    <PackageReference Include="Markdown.ColorCode" Version="3.0.1" />
+    <PackageReference Include="WebStoating.Markdig.Prism" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

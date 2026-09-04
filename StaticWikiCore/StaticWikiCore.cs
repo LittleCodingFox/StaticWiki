@@ -1,6 +1,6 @@
 ﻿using Markdig;
 using Markdig.Extensions.AutoIdentifiers;
-using Markdown.ColorCode;
+using Markdig.Prism;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -1318,7 +1318,7 @@ namespace StaticWiki
 
                         usedExtensions.Add("Color Code");
 
-                        pipelineBuilder = pipelineBuilder.UseColorCode();
+                        pipelineBuilder = pipelineBuilder.UsePrism();
 
                         break;
 
