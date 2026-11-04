@@ -1,7 +1,7 @@
 [categories]Sample[/categories]
 [title]Introduction[/title]
 
-[Changelog](Changelog) &nbsp;&middot;&nbsp; [Documentation](Notes) &nbsp;&middot;&nbsp; [Instructions](Instructions)
+[Changelog](Changelog) &nbsp;&middot;&nbsp; [Documentation](Notes) &nbsp;&middot;&nbsp; [Instructions](Instructions) &nbsp;&middot;&nbsp; [Dark Theme](index_dark)
 
 Static Wiki is a pure HTML [Markdown](http://www.markdowntutorial.com/)-based wiki which can be read without additional software, and even while offline.
 

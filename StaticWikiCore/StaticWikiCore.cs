@@ -1,5 +1,4 @@
 ﻿using Markdig;
-using Markdig.Extensions.AutoIdentifiers;
 using Markdig.Prism;
 using System;
 using System.Collections.Generic;

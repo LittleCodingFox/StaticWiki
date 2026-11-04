@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:title" content="{TITLE}" />
+    <meta property="og:type" content="website" />
+    <title>{TITLE}</title>
+
+    <!-- Bootstrap -->
+	<link rel="stylesheet" href="{ROOT}vendor/css/bootstrap.min.css">
+	
+	<!-- Prism theme -->
+	<link rel="stylesheet" href="{ROOT}vendor/css/prism.css">
+	
+	<style type="text/css">
+		.columnowner
+		{
+			position: relative;
+			margin-left: auto;
+			margin-right: auto;
+			padding-right: 15px;
+			padding-left: 15px;
+			max-width: 90%;
+		}
+	
+		.flexhandler
+		{
+			flex-grow: 0;
+			flex-shrink: 0;
+			flex-basis: 100%;
+			max-width: 100%;
+		}
+		
+		.flexwrapper
+		{
+			display: flex;
+			flex-wrap: wrap;
+		}
+	
+		.item
+		{
+			display: flex;
+			flex-direction: column;
+			border-top-width: 1px;
+			border-bottom-width: 1px;
+			border-right-width: 1px;
+			border-left-width: 1px;
+			border-top-solid: 1px;
+			border-bottom-solid: 1px;
+			border-left-solid: 1px;
+			border-right-solid: 1px;
+			border-top-style: solid;
+			border-right-style: solid;
+			border-bottom-style: solid;
+			border-left-style: solid;
+			border-top-color: rgba(0, 0, 0, 0.125);
+			border-bottom-color: rgba(0, 0, 0, 0.125);
+			border-left-color: rgba(0, 0, 0, 0.125);
+			border-right-color: rgba(0, 0, 0, 0.125);
+			border-image-source: none;
+			border-image-slice: 100% 100% 100% 100%;
+			border-image-width: 1 1 1 1;
+			border-image-outset: 0 0 0 0;
+			border-image-repeat: stretch stretch;
+			border-top-left-radius: 0.25rem;
+			border-top-right-radius: 0.25rem;
+			border-bottom-left-radius: 0.25rem;
+			border-bottom-right-radius: 0.25rem;
+			border-left-left-radius: 0.25rem;
+			border-left-right-radius: 0.25rem;
+			border-right-left-radius: 0.25rem;
+			border-right-right-radius: 0.25rem;
+			
+			padding-left: 12px;
+			padding-right: 12px;
+			padding-top: 12px;
+			padding-bottom: 12px;
+		}
+		
+		.overlay
+		{
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: 70px;
+			bottom: 0;
+			z-index: 1050;
+			overflow: hidden;
+			outline: 0;
+			visibility: hidden;
+		}
+		
+		#searchResults
+		{
+			padding-left: 15px;
+			padding-right: 15px;
+			padding-top: 15px;
+			padding-bottom: 15px;
+		}
+	</style>
+  </head>
+  <body>
+	<nav class="navbar navbar-expand-lg bg-body-tertiary">
+	  <div class="container-fluid">
+		  <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		  </button>
+
+		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+		  <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+		  {BEGINNAV}
+		  <li class="nav-item"><a class="nav-link" href="{NAVLINK}">{NAVNAME}</a></li>
+		  {ENDNAV}
+		  </ul>
+		  <form class="d-flex" role="search">
+			  <input type="search" class="form-control me-2" placeholder="Search" aria-label="Search" id="searchField" onkeyup="javascript:onTextChange()" onblur="javascript:onTextDeSelect()">
+		  </form>
+		</div>
+	  </div>
+	</nav>
+	
+	<div class="columnowner">
+		<div class="flexwrapper">
+			<div class="flexhandler">
+				<div class="item">
+					<div class="col-sm-12">
+						[template name="thumbnails"]
+							[templateitem]
+							<div style="float: left">
+							  <img src="[templateitemtag]image[/templateitemtag]" class="img-thumbnail" alt="...">
+							  <p align="center"><strong>{TEMPLATEINDEX}-{TEMPLATEITEMINDEX}</strong></p>
+							</div>
+							[/templateitem]
+						[/template]
+
+                        [template name="toc"]
+                            <ul name="nav-item">
+
+                                [templateitem]
+                                <li>
+                                    <a href="[templateitemtag]page-link[/templateitemtag]">[templateitemtag]page-name[/templateitemtag]</a>
+                                </li>
+                                [/templateitem]
+                            </ul>
+                        [/template]
+
+						<h1>{PAGETITLE}</h1>
+
+						{BEGINIFCATEGORIES}
+						<span>
+						<strong>Categories</strong>
+							{BEGINPAGECATEGORIES}
+								<a href="{CATEGORYLINK}">{CATEGORYNAME}</a>
+							{ENDPAGECATEGORIES}
+						</span>
+						{ENDIFCATEGORIES}
+						
+						<hr>
+
+                        {TOC}
+
+						{CONTENT}
+						
+						{BEGINCATEGORYLIST}
+						<h4>Pages in this category</h4>
+						<hr />
+							{BEGINPAGECATEGORIES}
+								<a href="{CATEGORYLINK}"><strong>{CATEGORYNAME}</strong></a><br />
+							{ENDPAGECATEGORIES}
+						{ENDCATEGORYLIST}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="columnowner overlay" id="searchResultsCover">
+		<div class="searchItemContainer item text-dark-emphasis bg-dark-subtle border border-dark-subtle rounded-3" style="height: 90%; overflow:hidden">
+			<h2 style="text-align: center">Search results</h2>
+			
+			<div id="searchResults" style="overflow-y: auto">
+			</div>
+		</div>
+	</div>
+	
+    <script src="{ROOT}vendor/js/jquery-4.0.0.min.js"></script>
+	<script src="{ROOT}vendor/js/bootstrap.bundle.min.js"></script>
+	<script src="{ROOT}vendor/js/prism.js"></script>
+		
+	<script type="text/javascript">
+		var searchNames = [{SEARCHNAMES}];
+		var searchURLs = [{SEARCHURLS}];
+		
+		function onTextDeSelect()
+		{
+			setTimeout("$('#searchResults').html(''); $('#searchResultsCover').css('visibility', 'hidden')", 200);
+		}
+		
+		function onTextChange()
+		{
+			var text = $('#searchField').val();
+			
+			if(text.length == 0)
+			{
+				$('#searchResultsCover').css('visibility', 'hidden');
+
+				return;
+			}
+			
+			var results = [];
+			
+			for(var i = 0; i < searchNames.length; i++)
+			{
+				if(searchNames[i].toLowerCase().indexOf(text.toLowerCase()) >= 0)
+				{
+					results[results.length] = {
+						name: searchNames[i],
+						URL: searchURLs[i]
+					};
+				}
+			}
+			
+			if(results.length == 0)
+			{
+				$('#searchResultsCover').css('visibility', 'hidden');
+
+				return;
+			}
+			
+			var HTML = "";
+			
+			for(var i = 0; i < results.length; i++)
+			{
+				HTML += "<a href=\"" + results[i].URL + "\">" + results[i].name + "</a><br /><br />";
+			}
+			
+			$('#searchResultsCover').css('visibility', 'inherit');
+			$('#searchResults').html(HTML);
+		}
+		
+		$(document).ready(function() 
+		{
+			$('a[href$="#"]')
+				.wrap("<strong></strong>")
+				.addClass("text-danger");
+		});
+	</script>
+  </body>
+</html>

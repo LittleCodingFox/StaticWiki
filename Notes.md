@@ -30,11 +30,15 @@ Additionally, you can create category pages in your sources (with their name in 
 Category pages are always created in the root directory of your wiki (the destination folder where your wiki is generated).
 So if you want to add custom content to a category page, you must create that file in the root directory.
 
+You can also make text in the theme or page vary based on one or more categories using the `[categorycontent]` tag.
+
+It works in the form of `[categorycontent categories=a, b, c, d]content goes here[/categorycontent]`. An empty category list makes it add the content if the page has no categories.
+
 # Navigation
 
 Regular navigation can be done using a `Navigation.list` file at the workspace directory (the same directory that has your `staticwiki.ini` file), where each line corresponds to a name and a link, separated by a `=`. For example:
 
-```
+```ini
 Google=http://www.google.com
 ```
 
@@ -47,67 +51,37 @@ Essentially, you can add HTML to your Markdown, separate from the Markdown itsel
 
 So, for instance, you can do:
 
-```
+```html
 <strong><a href="http://www.google.com">Google</a></strong>
 ```
 
 But not:
 
-```
+```markdown
 <strong>[Google](http://www.google.com)</strong>
 ```
 
 For adding an image in a custom way, such as a custom size, you can do simple HTML like:
 
-```
+```html
 <img src="my image.png" width="my width" height="my height">
 ```
 
 Or:
 
-```
+```html
 <img src="my image.png" style="border:1; width:my width; height: my height">
 ```
 
-Other media formats such as audio and video can also be embedded using the <audio> or <video> HTML tags. However, you must whitelist the appropriate file extensions in staticwiki.ini or the files will not be exported.
-
 # Markdown Extensions
 
-You can use several [Markdig](https://github.com/lunet-io/markdig) extensions by using the `Extensions` field in `staticwiki.ini`.
-Extensions are separated by a comma and can have spaces. So if you want to use the `Bootstrap` and `Pipe Tables` extensions, you'd add this:
+You can use several [Markdig](https://github.com/xoofx/markdig) extensions by using the `Use(name)` fields in `staticwiki.ini`.
 
-```
-MarkdownExtensions=Bootstrap, Pipe Tables
-```
+Used extensions should have a value of 1 to be used.
 
-These are the available extensions:
+You can find more details on this in the [Markdig](https://github.com/xoofx/markdig) page.
 
-- `Bootstrap`
-- `Pipe Tables`
-- `Grid Tables`
-- `Grid Tables`
-- `Extra Emphasis`
-- `Special Attributes`
-- `Definition Lists`
-- `Footnotes`
-- `Auto Identifiers`
-- `Auto Links`
-- `Task Lists`
-- `Extra Bullet Lists`
-- `Media Support`
-- `Abbreviations`
-- `Citations`
-- `Custom Containers`
-- `Figures`
-- `Footers`
-- `Mathematics`
-- `Hardline Breaks`
-- `Emoji`
-- `Smarty Pants`
-- `Diagrams`
-- `YAML Frontmatter`
-
-You can find more details on this in the [Markdig](https://github.com/lunet-io/markdig) page.
+Color Code syntax highlighting information can be found at https://wbaldoumas.github.io/markdown-colorcode/
 
 # Templates
 
@@ -117,7 +91,7 @@ Templates can have tags and items, and each item can have tags. Tags can have mu
 
 Any other content in a template item is added as content of the template item with the `{TEMPLATEITEMCONTENT}` theme tag.
 
-You can find an example of a template in the default theme file and in the Templates sample page.
+You can find an example of a template in the default theme file and in the [Templates](Templates) sample page.
 
 # Active Page
 
@@ -125,7 +99,7 @@ You can add content if a page is active using the `[activepage name="Your page n
 
 You can also add a link to a page from anywhere using the `[pagelink]page name[/pagelink]` tag, which will automatically use `../` when needed to make sure it's in the right folder.
 
-# TOC
+# Table of Contents
 
 You can make a table of contents section for a page by adding a `[toc]contents[/toc]` tag to it. The contents you put in it will be applied in the `{TOC}` section of your theme, if that theme supports it.
 
@@ -133,7 +107,7 @@ You can make a table of contents section for a page by adding a `[toc]contents[/
 
 To use themes, you must specify the themes in the `staticwiki.ini` file. You must specify the default theme name as well as a list of names and paths.
 
-```
+```ini
 DefaultThemeName=Default
 Themes=Default:staticwikitheme/theme.html
 ```
@@ -144,26 +118,27 @@ To override a specific theme in a page, you can use the `[theme]theme name[/them
 
 Special sections in themes are:
 
-- `{TITLE}` - should be placed on the &lt;title&gt; tag
-- `{CONTENT}` - should be placed where you want the page content to show
-- `{SEARCHNAMES}` - A list of javascript strings containing the page names
-- `{SEARCHADDRESSES}` - A list of javascript strings containing the page addresses
-- `{BEGINNAV}` - Begins a code snippet for navigation
-- `{ENDNAV}` - Ends a code snippet for navigation
-- `{NAVNAME}` - The name of the navigation item
-- `{NAVLINK}` - The link of the navigation item
-- `{ROOT}` - Root folder indicator for theme files
-- `{BEGINPAGECATEGORIES}` - Begins a code snippet for inserting a page's categories
-- `{ENDPAGECATEGORIES}` - Ends a code snippet for a page's categories
-- `{BEGINCATEGORYLIST}` - Begins the list of a category page's contents
-- `{ENDCATEGORYLIST}` - Ends the list of a category page's contents
-- `{CATEGORYNAME}`- The name of a category
-- `{CATEGORYLINK}` - The link to a category
-- `{BEGINIFCATEGORIES}` - Begins a code snippet if the page has categories
-- `{ENDIFCATEGORIES}` - Ends a code snippet if the page has categories
-- `{BASENAME}` - The name of the current file
-- `{PAGETITLE}` - The title of the current file
-- `{TEMPLATEINDEX}` - The index of a template in a page.
-- `{TEMPLATEITEMINDEX}` - The index of a template item inside a template.
-- `{TEMPLATEITEMCONTENT}` - The content of a template item is put here.
--  `{TOC}` - The `[toc]` tag in a page will be applied here.
+| Name                    | Description                                                                                               |
+| ------------------------|-----------------------------------------------------------------------------------------------------------|
+| `{TITLE}`               | Should be placed on the &lt;title&gt; tag                                                                 |
+| `{CONTENT}`             | Should be placed where you want the page content to show                                                  |
+| `{SEARCHNAMES}`         | A list of javascript strings containing the page names                                                    |
+| `{SEARCHADDRESSES}`     | A list of javascript strings containing the page addresses                                                |
+| `{BEGINNAV}`            | Begins a navigation item code snippet (used unless you use an specific navigation content)                |
+| `{ENDNAV}`              | Ends the navigation item code snippet                                                                     |
+| `{NAVNAME}`             | The name of the navigation item                                                                           |
+| `{NAVLINK}`             | The link of the navigation item                                                                           |
+| `{ROOT}`                | relative path to the root of the wiki. Used for sub-folders to properly link to resources and other pages |
+| `{BEGINPAGECATEGORIES}` | Begins a code snippet for inserting a page's categories                                                   |
+| `{ENDPAGECATEGORIES}`   | Ends a code snippet for a page's categories                                                               |
+| `{BEGINCATEGORYLIST}`   | Begins the list of a category page's contents                                                             |
+| `{ENDCATEGORYLIST}`     | Ends the list of a category page's contents                                                               |
+| `{CATEGORYNAME}`        | The name of a category                                                                                    |
+| `{CATEGORYLINK}`        | The link to a category                                                                                    |
+| `{BEGINIFCATEGORIES}`   | Begins a code snippet if the page has categories                                                          |
+| `{ENDIFCATEGORIES}`     | Ends a code snippet if the page has categories                                                            |
+| `{BASENAME}`            | The name of the current file                                                                              |
+| `{PAGETITLE}`           | The title of the current file                                                                             |
+| `{TEMPLATEINDEX}`       | The index of a template in a page.                                                                        |
+| `{TEMPLATEITEMINDEX}`   | The index of a template item inside a template.                                                           |
+| `{TEMPLATEITEMCONTENT}` | The content of a template item is put here.                                                               |

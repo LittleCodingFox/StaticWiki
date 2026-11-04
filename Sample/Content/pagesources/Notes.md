@@ -42,7 +42,7 @@
 [/templateitem]
 
 [templateitem]
-[templateitemtag name="page-link"]#toc[/templateitemtag]
+[templateitemtag name="page-link"]#table-of-contents[/templateitemtag]
 [templateitemtag name="page-name"]TOC[/templateitemtag]
 [/templateitem]
 
@@ -159,7 +159,7 @@ You can add content if a page is active using the `[activepage name="Your page n
 
 You can also add a link to a page from anywhere using the `[pagelink]page name[/pagelink]` tag, which will automatically use `../` when needed to make sure it's in the right folder.
 
-# TOC
+# Table of Contents
 
 You can make a table of contents section for a page by adding a `[toc]contents[/toc]` tag to it. The contents you put in it will be applied in the `{TOC}` section of your theme, if that theme supports it.
 
