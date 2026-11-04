@@ -133,6 +133,8 @@ Or:
 <img src="my image.png" style="border:1; width:my width; height: my height">
 ```
 
+Other media formats such as audio and video can also be embedded using the <audio> or <video> HTML tags. However, you must whitelist the appropriate file extensions in staticwiki.ini or the files will not be exported.
+
 # Markdown Extensions
 
 You can use several [Markdig](https://github.com/xoofx/markdig) extensions by using the `Use(name)` fields in `staticwiki.ini`.
